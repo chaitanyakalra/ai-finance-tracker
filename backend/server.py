@@ -16,9 +16,9 @@ ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+db = client[os.environ.get('DB_NAME', 'finance_tracker')]
 
 # Configure Gemini API
 gemini_api_key = os.environ.get('GEMINI_API_KEY')
@@ -70,15 +70,52 @@ SAMPLE_EXPENSES = [
 # Initialize sample data
 @app.on_event("startup")
 async def startup_db():
-    # Check if expenses collection is empty
-    count = await db.expenses.count_documents({})
-    if count == 0:
-        # Add sample expenses
-        for expense in SAMPLE_EXPENSES:
-            expense_doc = expense.copy()
-            expense_doc['created_at'] = datetime.now(timezone.utc).isoformat()
-            await db.expenses.insert_one(expense_doc)
-        logging.info("Sample expenses loaded")
+    try:
+        # Test MongoDB connection
+        await client.admin.command('ping')
+        logging.info(f"✅ Connected to MongoDB at {mongo_url}")
+        
+        # Check if expenses collection is empty
+        count = await db.expenses.count_documents({})
+        if count == 0:
+            # Add sample expenses
+            for expense in SAMPLE_EXPENSES:
+                expense_doc = expense.copy()
+                expense_doc['created_at'] = datetime.now(timezone.utc).isoformat()
+                await db.expenses.insert_one(expense_doc)
+            logging.info("Sample expenses loaded")
+        else:
+            logging.info(f"Found {count} existing expenses in database")
+    except Exception as e:
+        logging.error(f"""
+╔═══════════════════════════════════════════════════════════════╗
+║  ⚠️  MongoDB Connection Error                                  ║
+╠═══════════════════════════════════════════════════════════════╣
+║                                                               ║
+║  MongoDB is not running or not accessible.                    ║
+║                                                               ║
+║  SOLUTION OPTIONS:                                            ║
+║                                                               ║
+║  Option 1: Use MongoDB Atlas (Cloud - Recommended)            ║
+║    1. Sign up at: https://www.mongodb.com/cloud/atlas        ║
+║    2. Create a free cluster                                   ║
+║    3. Create backend/.env file with:                          ║
+║       MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net/  ║
+║       DB_NAME=finance_tracker                                 ║
+║                                                               ║
+║  Option 2: Install MongoDB Locally                            ║
+║    1. Download from: https://www.mongodb.com/try/download     ║
+║    2. Install and start MongoDB service                       ║
+║    3. Create backend/.env file with:                          ║
+║       MONGO_URL=mongodb://localhost:27017                     ║
+║       DB_NAME=finance_tracker                                 ║
+║                                                               ║
+║  Current connection string: {mongo_url}                       ║
+║  Error: {str(e)[:40]}...                                      ║
+║                                                               ║
+╚═══════════════════════════════════════════════════════════════╝
+        """)
+        raise
 
 # Routes
 @api_router.get("/")
