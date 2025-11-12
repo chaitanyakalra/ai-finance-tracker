@@ -30,7 +30,7 @@ A web application showcasing AI-powered personal finance management with multi-a
 ## Tech Stack
 
 **Backend:**
-- FastAPI (Python)
+- Node.js with Express.js (JavaScript)
 - MongoDB for data storage
 - Google Gemini API for AI capabilities
 
@@ -38,6 +38,8 @@ A web application showcasing AI-powered personal finance management with multi-a
 - React with Hooks
 - Vanilla CSS (minimal styling for MVP)
 - Axios for API calls
+
+**Note:** The original Python/FastAPI backend has been replaced with a JavaScript/Node.js implementation in the `backend-js/` folder.
 
 ## API Endpoints
 
@@ -74,18 +76,20 @@ The app comes pre-loaded with 8 sample transactions totaling ₹15,100:
 
 ## Environment Variables
 
-Backend `.env`:
+Backend (in `backend-js/.env`):
 ```
 MONGO_URL=mongodb://localhost:27017
-DB_NAME=finance_guard_db
-CORS_ORIGINS=*
+DB_NAME=finance_tracker
 GEMINI_API_KEY=<your-gemini-api-key>
+PORT=8000
+CORS_ORIGINS=http://localhost:3000
 ```
 
-Frontend `.env`:
+Frontend `.env` (optional):
 ```
-REACT_APP_BACKEND_URL=<backend-url>
+REACT_APP_BACKEND_URL=http://localhost:8000
 ```
+(Defaults to `http://localhost:8000` if not set)
 
 ## Project Purpose
 
