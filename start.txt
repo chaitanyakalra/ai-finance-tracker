@@ -1,3 +1,6 @@
 python -m uvicorn server:app --host 0.0.0.0 --port 8000 --reload
 
+git pull https://chaitanyakalra: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@github.com/chaitanyakalra/ai-finance-tracker.git
+
+
 
