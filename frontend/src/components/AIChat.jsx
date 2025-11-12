@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../utils/api";
+import { apiService } from "../utils/api";
 
 function AIChat() {
   const [chatQuestion, setChatQuestion] = useState("");
@@ -14,7 +14,7 @@ function AIChat() {
     setChatResponse("");
     
     try {
-      const response = await api.chat(chatQuestion);
+      const response = await apiService.aiChat(chatQuestion);
       setChatResponse(response.data.response);
     } catch (error) {
       console.error("Error in AI chat:", error);

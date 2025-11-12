@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../utils/api";
+import { apiService } from "../utils/api";
 
 function MultiAgent() {
   const [agentQuestion, setAgentQuestion] = useState("");
@@ -18,7 +18,7 @@ function MultiAgent() {
     setDisplayIndex(0);
     
     try {
-      const response = await api.multiAgent(agentQuestion);
+      const response = await apiService.multiAgentAnalysis(agentQuestion);
       
       setAgentResponses(response.data.agents);
       setAgentSummary(response.data.summary);

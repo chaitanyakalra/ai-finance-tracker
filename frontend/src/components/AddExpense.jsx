@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../utils/api";
+import { apiService } from "../utils/api";
 
 function AddExpense({ setActiveTab, setLoading, loading }) {
   const [newExpense, setNewExpense] = useState({
@@ -13,7 +13,7 @@ function AddExpense({ setActiveTab, setLoading, loading }) {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.addExpense({
+      await apiService.createExpense({
         ...newExpense,
         amount: parseFloat(newExpense.amount)
       });

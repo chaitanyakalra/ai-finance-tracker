@@ -1,14 +1,14 @@
 import { useEffect } from "react";
-import { api } from "../utils/api";
+import { apiService } from "../utils/api";
 
 function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, insight, setInsight }) {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
       const [statsRes, recentRes, insightRes] = await Promise.all([
-        api.getStats(),
-        api.getRecent(),
-        api.getInsight()
+        apiService.getExpenseStats(),
+        apiService.getRecentExpenses(),
+        apiService.getBehavioralInsight()
       ]);
       
       setStats(statsRes.data);
