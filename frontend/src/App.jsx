@@ -6,13 +6,23 @@ import Dashboard from "./components/Dashboard";
 import AddExpense from "./components/AddExpense";
 import AIChat from "./components/AIChat";
 import MultiAgent from "./components/MultiAgent";
+import LandingPage from "./components/LandingPage";
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [stats, setStats] = useState({ total: 0, by_category: {}, count: 0 });
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [insight, setInsight] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const handleGetStarted = () => {
+    setShowLanding(false);
+  };
+
+  if (showLanding) {
+    return <LandingPage onGetStarted={handleGetStarted} />;
+  }
 
   return (
     <div className="App">

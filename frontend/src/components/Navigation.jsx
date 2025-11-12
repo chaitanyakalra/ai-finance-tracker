@@ -1,34 +1,29 @@
+import { LayoutDashboard, PlusCircle, MessageSquare, Users } from "lucide-react";
+
 function Navigation({ activeTab, setActiveTab }) {
+  const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+    { id: "add-expense", label: "Add Expense", icon: <PlusCircle size={18} /> },
+    { id: "ai-chat", label: "AI Chat", icon: <MessageSquare size={18} /> },
+    { id: "multi-agent", label: "Multi-Agent", icon: <Users size={18} /> }
+  ];
+
   return (
     <nav className="nav-tabs" data-testid="nav-tabs">
-      <button 
-        className={activeTab === "dashboard" ? "active" : ""}
-        onClick={() => setActiveTab("dashboard")}
-        data-testid="nav-dashboard"
-      >
-        Dashboard
-      </button>
-      <button 
-        className={activeTab === "add-expense" ? "active" : ""}
-        onClick={() => setActiveTab("add-expense")}
-        data-testid="nav-add-expense"
-      >
-        Add Expense
-      </button>
-      <button 
-        className={activeTab === "ai-chat" ? "active" : ""}
-        onClick={() => setActiveTab("ai-chat")}
-        data-testid="nav-ai-chat"
-      >
-        AI Chat
-      </button>
-      <button 
-        className={activeTab === "multi-agent" ? "active" : ""}
-        onClick={() => setActiveTab("multi-agent")}
-        data-testid="nav-multi-agent"
-      >
-        Multi-Agent Demo
-      </button>
+      <div className="nav-container">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`nav-tab ${activeTab === tab.id ? "active" : ""}`}
+            onClick={() => setActiveTab(tab.id)}
+            data-testid={`nav-${tab.id}`}
+          >
+            <span className="nav-icon">{tab.icon}</span>
+            <span className="nav-label">{tab.label}</span>
+            {activeTab === tab.id && <span className="nav-indicator"></span>}
+          </button>
+        ))}
+      </div>
     </nav>
   );
 }

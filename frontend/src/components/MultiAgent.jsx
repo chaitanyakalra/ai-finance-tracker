@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { apiService } from "../utils/api";
+import { Users, Send, Sparkles, Loader2, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function MultiAgent() {
   const [agentQuestion, setAgentQuestion] = useState("");
@@ -37,52 +39,190 @@ function MultiAgent() {
     }
   };
 
+  const agents = [
+    { name: "Budget Analyst", emoji: "📊", color: "#3b82f6", role: "Spending patterns & budget" },
+    { name: "Investment Advisor", emoji: "💰", color: "#10b981", role: "Investment & planning" },
+    { name: "Risk Assessor", emoji: "🛡️", color: "#f59e0b", role: "Financial risks" }
+  ];
+
+  const exampleQuestions = [
+    "Should I buy a laptop for ₹50,000?",
+    "Is it a good time to invest ₹1,00,000?",
+    "How can I save ₹10,000 per month?"
+  ];
+
   return (
     <div className="multi-agent" data-testid="multi-agent-view">
-      <h2>Multi-Agent Financial Analysis</h2>
-      <p className="help-text">Get comprehensive financial advice from multiple AI specialists.</p>
-      
-      <form onSubmit={handleMultiAgent} className="agent-form" data-testid="agent-form">
-        <input
-          type="text"
-          value={agentQuestion}
-          onChange={(e) => setAgentQuestion(e.target.value)}
-          placeholder="E.g., Should I buy a laptop for ₹50,000?"
-          data-testid="agent-question-input"
-        />
-        <button 
-          type="submit" 
-          disabled={agentLoading}
-          data-testid="agent-submit-button"
-        >
-          {agentLoading ? "Consulting Agents..." : "Get Multi-Agent Analysis"}
-        </button>
-      </form>
-      
-      {agentResponses.length > 0 && (
-        <div className="agent-responses" data-testid="agent-responses">
-          {agentResponses.map((agent, index) => (
-            <div 
-              key={index} 
-              className={`agent-response ${index < displayIndex ? 'visible' : 'hidden'}`}
-              data-testid={`agent-response-${index}`}
-            >
-              <h3>
-                <span className="agent-emoji">{agent.emoji}</span>
-                {agent.agent}
-              </h3>
-              <p className="agent-text">{agent.response}</p>
-            </div>
-          ))}
-          
-          {displayIndex >= agentResponses.length && agentSummary && (
-            <div className="agent-summary" data-testid="agent-summary">
-              <h3>📋 Final Recommendation</h3>
-              <p>{agentSummary}</p>
-            </div>
-          )}
+      <motion.div 
+        className="page-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div>
+          <h2>
+            <Users className="page-icon" />
+            Multi-Agent Analysis
+          </h2>
+          <p className="page-subtitle">Get comprehensive advice from 3 specialized AI agents</p>
         </div>
-      )}
+        <div className="ai-badge">
+          <Sparkles size={16} />
+          <span>Collaborative AI</span>
+        </div>
+      </motion.div>
+
+      <div className="agents-showcase">
+        {agents.map((agent, idx) => (
+          <motion.div 
+            key={idx} 
+            className="agent-preview" 
+            style={{ borderColor: agent.color }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: idx * 0.1 }}
+            whileHover={{ scale: 1.05, y: -5 }}
+          >
+            <div className="agent-preview-emoji" style={{ background: `${agent.color}20` }}>
+              {agent.emoji}
+            </div>
+            <div className="agent-preview-info">
+              <h4>{agent.name}</h4>
+              <p>{agent.role}</p>
+            </div>
+            {agentLoading && displayIndex > idx && (
+              <CheckCircle2 size={20} style={{ color: agent.color }} />
+            )}
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="multi-agent-container">
+        <motion.div 
+          className="example-questions"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <h4>💡 Example questions:</h4>
+          <div className="example-chips">
+            {exampleQuestions.map((question, idx) => (
+              <button
+                key={idx}
+                className="example-chip"
+                onClick={() => setAgentQuestion(question)}
+                disabled={agentLoading}
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        <motion.form 
+          onSubmit={handleMultiAgent} 
+          className="agent-form" 
+          data-testid="agent-form"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <div className="agent-input-wrapper">
+            <Users className="input-icon" />
+            <input
+              type="text"
+              value={agentQuestion}
+              onChange={(e) => setAgentQuestion(e.target.value)}
+              placeholder="Ask a financial question to get multi-agent analysis..."
+              data-testid="agent-question-input"
+              disabled={agentLoading}
+            />
+          </div>
+          <button 
+            type="submit" 
+            className="agent-submit-button"
+            disabled={agentLoading || !agentQuestion.trim()}
+            data-testid="agent-submit-button"
+          >
+            {agentLoading ? (
+              <>
+                <Loader2 className="button-icon spinning" />
+                Consulting Agents...
+              </>
+            ) : (
+              <>
+                <Send className="button-icon" />
+                Get Analysis
+              </>
+            )}
+          </button>
+        </motion.form>
+        
+        <AnimatePresence>
+          {agentResponses.length > 0 && (
+            <div className="agent-responses" data-testid="agent-responses">
+            {agentResponses.map((agent, index) => {
+              const agentColor = agents.find(a => a.name === agent.agent)?.color || "#667eea";
+              return (
+                <div 
+                  key={index} 
+                  className={`agent-response ${index < displayIndex ? 'visible' : 'hidden'}`}
+                  data-testid={`agent-response-${index}`}
+                  style={{ borderLeftColor: agentColor }}
+                >
+                  <div className="agent-response-header">
+                    <div className="agent-response-title">
+                      <span className="agent-emoji" style={{ background: `${agentColor}20` }}>
+                        {agent.emoji}
+                      </span>
+                      <h3>{agent.agent}</h3>
+                    </div>
+                    {index < displayIndex && (
+                      <CheckCircle2 size={20} style={{ color: agentColor }} />
+                    )}
+                  </div>
+                  <p className="agent-text">{agent.response}</p>
+                </div>
+              );
+            })}
+            
+            {displayIndex >= agentResponses.length && agentSummary && (
+              <motion.div 
+                className="agent-summary" 
+                data-testid="agent-summary"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="summary-header">
+                  <Sparkles className="summary-icon" />
+                  <h3>Final Recommendation</h3>
+                </div>
+                <p>{agentSummary}</p>
+              </motion.div>
+            )}
+          </div>
+        )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {agentLoading && (
+            <motion.div 
+              className="agents-loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+            <div className="loading-animation">
+              <div className="agent-loading-item">
+                <div className="loading-pulse"></div>
+                <span>Consulting agents...</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
