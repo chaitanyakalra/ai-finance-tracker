@@ -12,7 +12,7 @@ const ENV = {
 
 // Backend URL configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || 'http://13.200.222.100',
   API_PREFIX: '/api',
   TIMEOUT: 30000, // 30 seconds
 };
