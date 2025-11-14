@@ -345,11 +345,11 @@ export async function handleMultiAgentQuery(question, userId = 'default') {
     }
   }
   
-  const result = await handleMultiAgentQueryDirect(question, expenses);
-  return {
-    ...result,
-    source: 'direct'
-  };
+  // const result = await handleMultiAgentQueryDirect(question, expenses);
+  // return {
+  //   ...result,
+  //   source: 'direct'
+  // };
 }
 
 async function generateBehavioralInsightDirect(expenses) {

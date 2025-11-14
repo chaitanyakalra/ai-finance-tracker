@@ -21,7 +21,7 @@ function MultiAgent() {
     
     try {
       const response = await apiService.multiAgentAnalysis(agentQuestion);
-      
+      console.log( "handleMultiAgent", response);
       setAgentResponses(response.data.agents);
       setAgentSummary(response.data.summary);
       
