@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Sparkles, TrendingUp, Shield, Brain, ArrowRight, CheckCircle2, Zap, Users, BarChart3, MessageSquare } from "lucide-react";
+import { API_CONFIG } from "../config/api.config";
 import "../styles/LandingPage.css";
 
 const LandingPage = ({ onGetStarted }) => {
@@ -88,11 +89,18 @@ const LandingPage = ({ onGetStarted }) => {
           </p>
           
           <div className="hero-buttons">
-            <button className="btn-primary" onClick={onGetStarted}>
+            <button 
+              className="btn-primary" 
+              onClick={() => {
+                // Redirect to Google OAuth using configured backend URL
+                const backendUrl = API_CONFIG.BASE_URL;
+                window.location.href = `${backendUrl}/api/auth/google`;
+              }}
+            >
               Get Started Free
               <ArrowRight size={20} />
             </button>
-            <button className="btn-secondary">
+            <button className="btn-secondary" onClick={onGetStarted}>
               <Zap size={20} />
               See Demo
             </button>
@@ -279,7 +287,14 @@ const LandingPage = ({ onGetStarted }) => {
         <div className="cta-content">
           <h2 className="cta-title">Ready to Transform Your Finances?</h2>
           <p className="cta-subtitle">Join the future of personal finance management today</p>
-          <button className="btn-cta" onClick={onGetStarted}>
+          <button 
+            className="btn-cta" 
+            onClick={() => {
+              // Redirect to Google OAuth
+              const backendUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+              window.location.href = `${backendUrl}/api/auth/google`;
+            }}
+          >
             Start Your Journey
             <ArrowRight size={24} />
           </button>

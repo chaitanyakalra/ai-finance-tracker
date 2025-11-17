@@ -1,11 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
 import { getDB } from '../config/database.js';
 
-export async function createExpense({ date, amount, category, description }) {
+export async function createExpense({ userId, date, amount, category, description }) {
   const db = getDB();
+  
+  // Validate userId is provided
+  if (!userId) {
+    throw new Error('UserId is required to create an expense');
+  }
   
   const expense = {
     id: uuidv4(),
+    userId: String(userId), // Ensure userId is stored as string
     date,
     amount: parseFloat(amount),
     category,
@@ -17,22 +23,24 @@ export async function createExpense({ date, amount, category, description }) {
   return expense;
 }
 
-export async function getAllExpenses(limit = 1000) {
+export async function getAllExpenses(userId, limit = 1000) {
   const db = getDB();
   
+  // Filter expenses by userId
   const expenses = await db.collection('expenses')
-    .find({}, { projection: { _id: 0 } })
+    .find({ userId }, { projection: { _id: 0 } })
     .limit(limit)
     .toArray();
   
   return expenses;
 }
 
-export async function getRecentExpenses(limit = 10) {
+export async function getRecentExpenses(userId, limit = 10) {
   const db = getDB();
   
+  // Filter expenses by userId
   const expenses = await db.collection('expenses')
-    .find({}, { projection: { _id: 0 } })
+    .find({ userId }, { projection: { _id: 0 } })
     .sort({ date: -1 })
     .limit(limit)
     .toArray();
@@ -40,8 +48,9 @@ export async function getRecentExpenses(limit = 10) {
   return expenses;
 }
 
-export async function getExpenseStats() {
-  const expenses = await getAllExpenses();
+export async function getExpenseStats(userId) {
+  // Get expenses filtered by userId
+  const expenses = await getAllExpenses(userId);
   
   const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
   

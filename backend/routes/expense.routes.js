@@ -1,11 +1,13 @@
 import express from 'express';
 import * as expenseController from '../controllers/expense.controller.js';
+import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/', expenseController.createExpense);
-router.get('/', expenseController.getAllExpenses);
-router.get('/recent', expenseController.getRecentExpenses);
-router.get('/stats', expenseController.getExpenseStats);
+// All expense routes require JWT authentication
+router.post('/', authenticateToken, expenseController.createExpense);
+router.get('/', authenticateToken, expenseController.getAllExpenses);
+router.get('/recent', authenticateToken, expenseController.getRecentExpenses);
+router.get('/stats', authenticateToken, expenseController.getExpenseStats);
 
 export default router;

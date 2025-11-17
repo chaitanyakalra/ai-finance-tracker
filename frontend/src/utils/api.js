@@ -19,12 +19,30 @@ apiClient.interceptors.request.use(
   (config) => {
     // Add auth token if available
     const token = localStorage.getItem('authToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    const userId = localStorage.getItem('userId');
+    
+    console.log('🌐 API Request Interceptor:', {
+      url: config.url,
+      method: config.method,
+      hasAuthToken: !!token,
+      hasRefreshToken: !!refreshToken,
+      hasUserId: !!userId,
+      tokenLength: token?.length,
+      allLocalStorageKeys: Object.keys(localStorage)
+    });
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('✅ API Request: Authorization header added');
+    } else {
+      console.warn('⚠️ API Request: No authToken found in localStorage');
+      console.warn('⚠️ Available localStorage keys:', Object.keys(localStorage));
     }
     return config;
   },
   (error) => {
+    console.error('❌ API Request Interceptor Error:', error);
     return Promise.reject(error);
   }
 );
