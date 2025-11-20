@@ -130,9 +130,7 @@ function AIChat() {
               <Sparkles className="response-icon" />
               <h3>AI Response</h3>
             </div>
-            <div className="response-content">
-              <p>{chatResponse}</p>
-            </div>
+            <MarkdownLite text={chatResponse} />
           </motion.div>
         )}
         </AnimatePresence>
@@ -160,4 +158,67 @@ function AIChat() {
 }
 
 export default AIChat;
+
+function MarkdownLite({ text }) {
+  const currency = (v) => v;
+  const renderInline = (t) => {
+    const parts = [];
+    const regex = /\*\*([^*]+)\*\*/g;
+    let last = 0;
+    let m;
+    while ((m = regex.exec(t)) !== null) {
+      if (m.index > last) parts.push(t.slice(last, m.index));
+      parts.push(<strong key={parts.length}>{m[1]}</strong>);
+      last = regex.lastIndex;
+    }
+    if (last < t.length) parts.push(t.slice(last));
+    return parts;
+  };
+  const lines = String(text || "").split(/\r?\n/);
+  const elements = [];
+  let list = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (list.length) {
+        elements.push(
+          <ul key={`ul-${elements.length}`}>
+            {list.map((li, idx) => (
+              <li key={`li-${idx}`}>{renderInline(li)}</li>
+            ))}
+          </ul>
+        );
+        list = [];
+      }
+      continue;
+    }
+    const bullet = trimmed.match(/^[-*]\s+(.*)$/);
+    if (bullet) {
+      list.push(bullet[1]);
+      continue;
+    }
+    if (list.length) {
+      elements.push(
+        <ul key={`ul-${elements.length}`}>
+          {list.map((li, idx) => (
+            <li key={`li-${idx}`}>{renderInline(li)}</li>
+          ))}
+        </ul>
+      );
+      list = [];
+    }
+    elements.push(<p key={`p-${elements.length}`}>{renderInline(line)}</p>);
+  }
+  if (list.length) {
+    elements.push(
+      <ul key={`ul-${elements.length}`}>
+        {list.map((li, idx) => (
+          <li key={`li-${idx}`}>{renderInline(li)}</li>
+        ))}
+      </ul>
+    );
+  }
+  return <div className="response-content">{elements}</div>;
+}
 

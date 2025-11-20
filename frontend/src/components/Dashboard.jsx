@@ -392,7 +392,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 <Sparkles className="insight-sparkle" />
               </div>
               <div className="insight-content" data-testid="insight-content">
-                <pre style={{whiteSpace: 'pre-wrap', fontFamily: 'inherit'}}>{insight.insight}</pre>
+                <MarkdownLite text={insight.insight} />
               </div>
             </motion.div>
           )}
@@ -404,3 +404,64 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
 
 export default Dashboard;
 
+function MarkdownLite({ text, className = "response-content" }) {
+  const renderInline = (t) => {
+    const parts = [];
+    const regex = /\*\*([^*]+)\*\*/g;
+    let last = 0;
+    let m;
+    while ((m = regex.exec(t)) !== null) {
+      if (m.index > last) parts.push(t.slice(last, m.index));
+      parts.push(<strong key={parts.length}>{m[1]}</strong>);
+      last = regex.lastIndex;
+    }
+    if (last < t.length) parts.push(t.slice(last));
+    return parts;
+  };
+  const lines = String(text || "").split(/\r?\n/);
+  const elements = [];
+  let list = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (list.length) {
+        elements.push(
+          <ul key={`ul-${elements.length}`}>
+            {list.map((li, idx) => (
+              <li key={`li-${idx}`}>{renderInline(li)}</li>
+            ))}
+          </ul>
+        );
+        list = [];
+      }
+      continue;
+    }
+    const bullet = trimmed.match(/^[-*]\s+(.*)$/);
+    if (bullet) {
+      list.push(bullet[1]);
+      continue;
+    }
+    if (list.length) {
+      elements.push(
+        <ul key={`ul-${elements.length}`}>
+          {list.map((li, idx) => (
+            <li key={`li-${idx}`}>{renderInline(li)}</li>
+          ))}
+        </ul>
+      );
+      list = [];
+    }
+    elements.push(<p key={`p-${elements.length}`}>{renderInline(line)}</p>);
+  }
+  if (list.length) {
+    elements.push(
+      <ul key={`ul-${elements.length}`}>
+        {list.map((li, idx) => (
+          <li key={`li-${idx}`}>{renderInline(li)}</li>
+        ))}
+      </ul>
+    );
+  }
+  return <div className={className}>{elements}</div>;
+}

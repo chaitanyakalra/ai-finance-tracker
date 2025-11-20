@@ -25,7 +25,11 @@ export async function handleChat(req, res, next) {
     if (!checkGemini(res) || !checkDB(res)) return;
     
     const { question } = req.body;
-    const result = await aiService.handleChatQuery(question);
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User ID not found. Authentication required.' });
+    }
+    const result = await aiService.handleChatQuery(question, userId);
     
     res.json(result);
     console.log("Chat Result:", result);
@@ -39,7 +43,11 @@ export async function handleMultiAgent(req, res, next) {
     if (!checkGemini(res) || !checkDB(res)) return;
     
     const { question } = req.body;
-    const result = await aiService.handleMultiAgentQuery(question);
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User ID not found. Authentication required.' });
+    }
+    const result = await aiService.handleMultiAgentQuery(question, userId);
     
     res.json(result);
     console.log("Multi-Agent Result:", result);
@@ -52,7 +60,11 @@ export async function getBehavioralInsight(req, res, next) {
   try {
     if (!checkGemini(res) || !checkDB(res)) return;
     
-    const result = await aiService.generateBehavioralInsight();
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({ error: 'User ID not found. Authentication required.' });
+    }
+    const result = await aiService.generateBehavioralInsight(userId);
     res.json(result);
     console.log("Behavioral Insight:", result);
   } catch (error) {

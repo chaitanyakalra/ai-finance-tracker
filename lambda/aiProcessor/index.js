@@ -37,8 +37,32 @@ Provide a comprehensive, actionable response with:
 }
 
 async function processMultiAgent(expenses, question) {
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  const contextInfo = `Current monthly spending: ₹${totalExpenses.toFixed(2)}`;
+  const expenseSummary = prepareExpenseSummary(expenses);
+  const byCategory = {};
+  expenses.forEach(exp => { byCategory[exp.category] = (byCategory[exp.category] || 0) + Number(exp.amount); });
+  const totalAll = Object.values(byCategory).reduce((sum, amt) => sum + amt, 0);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthExpenses = expenses.filter(exp => { const d = new Date(exp.date); return d >= monthStart && d <= now; });
+  const byCategoryMonth = {};
+  monthExpenses.forEach(exp => { byCategoryMonth[exp.category] = (byCategoryMonth[exp.category] || 0) + Number(exp.amount); });
+  const totalMonth = Object.values(byCategoryMonth).reduce((sum, amt) => sum + amt, 0);
+  const daysElapsed = Math.max(1, Math.ceil((now - monthStart) / 86400000));
+  const avgDailyMonth = totalMonth / daysElapsed;
+  const topOverall = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([c,a])=>({category:c, amount:a}));
+  const topMonth = Object.entries(byCategoryMonth).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([c,a])=>({category:c, amount:a}));
+  const stats = {
+    totals: { all_time: totalAll, this_month: totalMonth },
+    average_daily: { this_month: avgDailyMonth },
+    top_categories: { all_time: topOverall, this_month: topMonth },
+    by_category_all_time: byCategory,
+    by_category_this_month: byCategoryMonth,
+    formatted: {
+      total_all_time: `₹${Number(totalAll).toFixed(2)}`,
+      total_this_month: `₹${Number(totalMonth).toFixed(2)}`,
+      avg_daily_this_month: `₹${Number(avgDailyMonth).toFixed(2)}`
+    }
+  };
   
   const agents = [
     {
@@ -75,8 +99,10 @@ async function processMultiAgent(expenses, question) {
 You are the ${agent.name}, a specialist in ${agent.role}.
 Your focus areas: ${agent.focus}
 
-User's financial context: ${contextInfo}
-User's question: ${question}
+Financial context:
+${expenseSummary}
+
+User Question: ${question}
 
 Provide your expert analysis from your specialized perspective.
 Be specific and actionable (4-5 sentences max).
@@ -107,6 +133,7 @@ Provide a unified final recommendation that:
 2. Prioritizes the most critical actions
 3. Provides a clear, actionable next step
 4. Is concise (3-4 sentences)
+Ground the recommendation in the financial context above.
 `;
   
   const summary = await callGemini(summaryPrompt);
@@ -114,6 +141,8 @@ Provide a unified final recommendation that:
   return {
     agents: agentResponses,
     summary,
+    context: expenseSummary,
+    stats,
     processed_by: 'Gemini Lambda'
   };
 }
