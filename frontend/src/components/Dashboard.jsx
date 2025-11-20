@@ -9,22 +9,33 @@ ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tool
 
 function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, insight, setInsight }) {
   const [activeChart, setActiveChart] = useState('doughnut');
+  const [insightLoading, setInsightLoading] = useState(false);
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, recentRes, insightRes] = await Promise.all([
+      const [statsRes, recentRes] = await Promise.all([
         apiService.getExpenseStats(),
-        apiService.getRecentExpenses(),
-        apiService.getBehavioralInsight()
+        apiService.getRecentExpenses()
       ]);
       
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
-      setInsight(insightRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateInsight = async () => {
+    try {
+      setInsightLoading(true);
+      const insightRes = await apiService.getBehavioralInsight();
+      setInsight(insightRes.data);
+    } catch (error) {
+      console.error("Error loading behavioral insight:", error);
+    } finally {
+      setInsightLoading(false);
     }
   };
 
@@ -374,6 +385,37 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 </motion.div>
               ))}
             </div>
+          </motion.div>
+
+          <motion.div 
+            className="insight-actions" 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
+            <div className="section-header-inline">
+              <h3>
+                <Brain className="section-icon" />
+                AI Behavioral Insight
+              </h3>
+            </div>
+            <button 
+              className="chat-submit-button"
+              onClick={handleGenerateInsight}
+              disabled={insightLoading}
+            >
+              {insightLoading ? (
+                <>
+                  <Loader2 className="button-icon spinning" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="button-icon" />
+                  Generate Insight
+                </>
+              )}
+            </button>
           </motion.div>
 
           {insight && (
