@@ -1,9 +1,10 @@
-import { LayoutDashboard, PlusCircle, MessageSquare, Users } from "lucide-react";
+import { LayoutDashboard, PlusCircle, MessageSquare, Users, Receipt } from "lucide-react";
 
 function Navigation({ activeTab, setActiveTab }) {
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
     { id: "add-expense", label: "Add Expense", icon: <PlusCircle size={18} /> },
+    { id: "bill-upload", label: "Bill Upload", icon: <Receipt size={18} /> },
     { id: "ai-chat", label: "AI Chat", icon: <MessageSquare size={18} /> },
     { id: "multi-agent", label: "Multi-Agent", icon: <Users size={18} /> }
   ];

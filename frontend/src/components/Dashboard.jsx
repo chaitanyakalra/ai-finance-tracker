@@ -353,10 +353,10 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 <Calendar className="section-icon" />
                 Recent Transactions
               </h3>
-              <span className="transaction-count">{recentExpenses.length} transactions</span>
+              <span className="transaction-count">{recentExpenses?.length} transactions</span>
             </div>
             <div className="transaction-list">
-              {recentExpenses.map((exp, idx) => (
+              {recentExpenses?.map((exp, idx) => (
                 <motion.div 
                   key={exp.id || idx} 
                   className="transaction-item" 

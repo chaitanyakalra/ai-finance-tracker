@@ -1,0 +1,393 @@
+.faculty-dashboard {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.faculty-dashboard.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 20px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.create-grant-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.create-grant-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+.dashboard-content {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 30px;
+}
+
+.grants-section h2,
+.bills-section h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state svg {
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.grants-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.grant-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.grant-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+}
+
+.grant-card.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+}
+
+.grant-header {
+    margin-bottom: 15px;
+}
+
+.student-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.student-info h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.status-badge.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.approved {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.rejected {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.grant-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.amount-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.amount-item .label {
+    font-size: 12px;
+    color: #999;
+}
+
+.amount-item .value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
+.amount-item .value.used {
+    color: #f59e0b;
+}
+
+.amount-item .value.remaining {
+    color: #10b981;
+}
+
+.grant-progress {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+}
+
+.bills-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bill-approval-card {
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 15px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 20px;
+}
+
+.bill-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.bill-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bill-info h3 {
+    margin: 0 0 5px 0;
+}
+
+.bill-amount {
+    font-size: 24px;
+    font-weight: 700;
+    color: #667eea;
+    margin: 5px 0;
+}
+
+.bill-date {
+    color: #999;
+    font-size: 14px;
+}
+
+.fraud-analysis {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #f59e0b;
+}
+
+.fraud-analysis h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px 0;
+    color: #f59e0b;
+}
+
+.fraud-score {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.score-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 700;
+}
+
+.flags {
+    margin: 10px 0;
+}
+
+.flags .flag {
+    display: inline-block;
+    background: #fee;
+    color: #c33;
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.validations {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.validations span {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.validations .valid {
+    color: #10b981;
+}
+
+.validations .invalid {
+    color: #ef4444;
+}
+
+.approval-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.approve-btn,
+.reject-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.approve-btn {
+    background: #10b981;
+    color: white;
+}
+
+.approve-btn:hover {
+    background: #059669;
+    transform: translateY(-2px);
+}
+
+.reject-btn {
+    background: #ef4444;
+    color: white;
+}
+
+.reject-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.rejection-form {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.rejection-form textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.rejection-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.rejection-actions button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.rejection-actions button:first-child {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.rejection-actions button:last-child {
+    background: #ef4444;
+    color: white;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-content {
+        grid-template-columns: 1fr;
+    }
+
+    .bill-approval-card {
+        grid-template-columns: 1fr;
+    }
+}

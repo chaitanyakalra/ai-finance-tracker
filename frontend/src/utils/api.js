@@ -158,6 +158,156 @@ export const apiService = {
   getBehavioralInsight: () => {
     return apiClient.get(getEndpoint(API_ENDPOINTS.AI.BEHAVIORAL_INSIGHT));
   },
+
+  // ========== Bill Endpoints ==========
+
+  /**
+   * Upload bills for AI extraction and fraud detection
+   * @param {FormData} formData - FormData containing bill images
+   * @returns {Promise} Upload response with bill IDs
+   */
+  uploadBills: (formData) => {
+    return apiClient.post(getEndpoint(API_ENDPOINTS.BILLS.UPLOAD), formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+
+  /**
+   * Get bill analysis by ID
+   * @param {string} billId - Bill ID
+   * @returns {Promise} Bill analysis data
+   */
+  getBillAnalysis: (billId) => {
+    const endpoint = API_ENDPOINTS.BILLS.GET_BILL.replace(':billId', billId);
+    return apiClient.get(getEndpoint(endpoint));
+  },
+
+  /**
+   * Get user's bills with pagination
+   * @param {Object} params - Query parameters
+   * @param {number} params.limit - Number of bills to fetch
+   * @param {number} params.skip - Number of bills to skip
+   * @param {string} params.status - Filter by status (optional)
+   * @returns {Promise} List of bills
+   */
+  getUserBills: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.skip) queryParams.append('skip', params.skip);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const endpoint = `${API_ENDPOINTS.BILLS.LIST}?${queryParams.toString()}`;
+    return apiClient.get(getEndpoint(endpoint));
+  },
+
+  /**
+   * Delete a bill
+   * @param {string} billId - Bill ID to delete
+   * @returns {Promise} Deletion confirmation
+   */
+  deleteBill: (billId) => {
+    const endpoint = API_ENDPOINTS.BILLS.DELETE.replace(':billId', billId);
+    return apiClient.delete(getEndpoint(endpoint));
+  },
+
+  /**
+   * Approve a bill (faculty only)
+   * @param {string} billId - Bill ID to approve
+   * @returns {Promise} Approval confirmation
+   */
+  approveBill: (billId) => {
+    return apiClient.patch(getEndpoint(`/bills/${billId}/approve`));
+  },
+
+  /**
+   * Reject a bill (faculty only)
+   * @param {string} billId - Bill ID to reject
+   * @param {string} reason - Rejection reason
+   * @returns {Promise} Rejection confirmation
+   */
+  rejectBill: (billId, reason) => {
+    return apiClient.patch(getEndpoint(`/bills/${billId}/reject`), { reason });
+  },
+
+  // ========== Grant Endpoints ==========
+
+  /**
+   * Create a grant (faculty only)
+   * @param {Object} grantData - Grant data
+   * @param {string} grantData.studentEmail - Student's email
+   * @param {number} grantData.amount - Grant amount
+   * @returns {Promise} Created grant
+   */
+  createGrant: (grantData) => {
+    return apiClient.post(getEndpoint('/grants/create'), grantData);
+  },
+
+  /**
+   * Get user's grants (faculty or student)
+   * @returns {Promise} List of grants
+   */
+  getMyGrants: () => {
+    return apiClient.get(getEndpoint('/grants/my-grants'));
+  },
+
+  /**
+   * Get grant details
+   * @param {string} grantId - Grant ID
+   * @returns {Promise} Grant details
+   */
+  getGrantDetails: (grantId) => {
+    return apiClient.get(getEndpoint(`/grants/${grantId}`));
+  },
+
+  /**
+   * Get student's active grant
+   * @returns {Promise} Active grant
+   */
+  getActiveGrant: () => {
+    return apiClient.get(getEndpoint('/grants/active'));
+  },
+
+  /**
+   * Cancel a grant (faculty only)
+   * @param {string} grantId - Grant ID
+   * @returns {Promise} Cancellation confirmation
+   */
+  cancelGrant: (grantId) => {
+    return apiClient.patch(getEndpoint(`/grants/${grantId}/cancel`));
+  },
+
+  // ========== Invitation Endpoints ==========
+
+  /**
+   * Accept grant invitation
+   * @param {string} token - Invitation token
+   * @returns {Promise} Accepted grant
+   */
+  acceptInvitation: (token) => {
+    return apiClient.get(getEndpoint(`/invitations/accept?token=${token}`));
+  },
+
+  // ========== User Endpoints ==========
+
+  /**
+   * Set user role (faculty or student)
+   * @param {string} role - 'faculty' or 'student'
+   * @returns {Promise} Role confirmation
+   */
+  setUserRole: (role) => {
+    return apiClient.post(getEndpoint('/users/set-role'), { role });
+  },
+
+  /**
+   * Get bills for a specific grant (faculty only)
+   * @param {string} grantId - Grant ID
+   * @returns {Promise} List of bills for the grant
+   */
+  getGrantBills: (grantId) => {
+    return apiClient.get(getEndpoint(`/bills/grant/${grantId}`));
+  },
 };
 
 // Legacy export for backward compatibility
