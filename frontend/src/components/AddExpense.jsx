@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { apiService } from "../utils/api";
 import { PlusCircle, Calendar, DollarSign, Tag, FileText, CheckCircle, Loader2, Lightbulb, Users, UserCheck } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 
 function AddExpense() {
@@ -41,6 +45,7 @@ function AddExpense() {
       setSelectedMembers([]);
       setGroupMembers([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splitExpense]);
 
   // Fetch group members when group is selected
@@ -48,6 +53,7 @@ function AddExpense() {
     if (selectedGroup) {
       fetchGroupMembers();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGroup]);
 
   const fetchGroups = async () => {
@@ -60,7 +66,7 @@ function AddExpense() {
       }
     } catch (error) {
       console.error("Error fetching groups:", error);
-      alert("Failed to load groups");
+      toast.error("Failed to load groups");
     } finally {
       setLoadingGroups(false);
     }
@@ -92,13 +98,18 @@ function AddExpense() {
   };
 
   const toggleMemberSelection = (userId) => {
-    setSelectedMembers(prev => {
-      if (prev.includes(userId)) {
-        return prev.filter(id => id !== userId);
-      } else {
-        return [...prev, userId];
-      }
-    });
+    if (splitType === 'full') {
+      // For full amount, only one person can be selected
+      setSelectedMembers([userId]);
+    } else {
+      setSelectedMembers(prev => {
+        if (prev.includes(userId)) {
+          return prev.filter(id => id !== userId);
+        } else {
+          return [...prev, userId];
+        }
+      });
+    }
   };
 
   const handleSplitTypeChange = (type) => {
@@ -106,9 +117,6 @@ function AddExpense() {
     if (type === 'equal') {
       // Select all members
       setSelectedMembers(groupMembers.map(m => m.userId));
-    } else if (type === 'full') {
-      // Clear selection - user will select ONE person
-      setSelectedMembers([]);
     } else {
       // Clear selection for manual selection
       setSelectedMembers([]);
@@ -122,14 +130,14 @@ function AddExpense() {
       if (splitExpense && selectedGroup) {
         // Validate member selection for custom split
         if (splitType === 'select' && selectedMembers.length === 0) {
-          alert("Please select at least one member to split with");
+          toast.error("Please select at least one member to split with");
           setLoading(false);
           return;
         }
 
         // Validate member selection for full amount
         if (splitType === 'full' && selectedMembers.length !== 1) {
-          alert("Please select exactly one person who owes the full amount");
+          toast.error("Please select exactly one person who owes the full amount");
           setLoading(false);
           return;
         }
@@ -148,14 +156,14 @@ function AddExpense() {
           : splitType === 'full'
             ? '1 person (full amount)'
             : `${selectedMembers.length} selected member(s)`;
-        alert(`Shared expense created and split among ${memberText}!`);
+        toast.success(`Shared expense created and split among ${memberText}!`);
       } else {
         // Create regular expense
         await apiService.createExpense({
           ...newExpense,
           amount: parseFloat(newExpense.amount)
         });
-        alert("Expense added successfully!");
+        toast.success("Expense added successfully!");
       }
 
       setNewExpense({
@@ -167,11 +175,13 @@ function AddExpense() {
       setSplitExpense(false);
       setSelectedGroup("");
 
-      setActiveTab("dashboard");
+      // Navigate to dashboard after short delay
+      setTimeout(() => navigate("/dashboard"), 1000);
+
     } catch (error) {
       console.error("Error adding expense:", error);
       const errorMessage = error.response?.data?.error || "Failed to add expense";
-      alert(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -201,9 +211,9 @@ function AddExpense() {
           </h2>
           <p className="text-muted-foreground">Track your spending and let AI analyze your patterns</p>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-3 mt-6">
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
@@ -251,8 +261,8 @@ function AddExpense() {
                       <div
                         key={cat.value}
                         className={`cursor-pointer rounded-xl border p-4 flex items-center gap-3 transition-all hover:scale-105 ${newExpense.category === cat.value
-                            ? `${cat.bg} ${cat.border} ring-2 ring-primary ring-offset-2`
-                            : "hover:bg-muted"
+                          ? `${cat.bg} ${cat.border} ring-2 ring-primary ring-offset-2`
+                          : "hover:bg-muted"
                           }`}
                         onClick={() => setNewExpense({ ...newExpense, category: cat.value })}
                       >
@@ -280,16 +290,124 @@ function AddExpense() {
                   />
                 </div>
 
-                <Button type="submit" className="w-full" size="lg" disabled={loading}>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Split Expense</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Share this cost with a group
+                    </p>
+                  </div>
+                  <Switch
+                    checked={splitExpense}
+                    onCheckedChange={setSplitExpense}
+                  />
+                </div>
+
+                <AnimatePresence>
+                  {splitExpense && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div className="space-y-2">
+                        <Label>Select Group</Label>
+                        {loadingGroups ? (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" /> Loading groups...
+                          </div>
+                        ) : groups.length > 0 ? (
+                          <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a group" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {groups.map((group) => (
+                                <SelectItem key={group.id} value={group.id}>
+                                  {group.name} ({group.members.length} members)
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="text-sm text-amber-500 flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            You don't have any groups yet. Create one in the header!
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedGroup && groups.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>Split Method</Label>
+                          <Select value={splitType} onValueChange={handleSplitTypeChange}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="equal">Split Equally (All members)</SelectItem>
+                              <SelectItem value="select">Select Members (Who owes you)</SelectItem>
+                              <SelectItem value="full">Full Amount (One person owes)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {selectedGroup && (splitType === 'select' || splitType === 'full') && (
+                        <div className="space-y-3 border rounded-lg p-4">
+                          <Label className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4" />
+                            {splitType === 'full'
+                              ? "Select who owes the full amount"
+                              : "Select who owes you"}
+                          </Label>
+
+                          {loadingMembers ? (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Loader2 className="h-4 w-4 animate-spin" /> Loading members...
+                            </div>
+                          ) : (
+                            <div className="grid gap-2">
+                              {groupMembers.map((member) => (
+                                <div
+                                  key={member.userId}
+                                  className={`flex items-center space-x-3 p-2 rounded-lg transition-colors ${selectedMembers.includes(member.userId)
+                                      ? "bg-primary/10 border-primary/20"
+                                      : "hover:bg-muted"
+                                    }`}
+                                >
+                                  <Checkbox
+                                    checked={selectedMembers.includes(member.userId)}
+                                    onCheckedChange={() => toggleMemberSelection(member.userId)}
+                                  />
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>{member.name?.charAt(0) || member.email.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex flex-col">
+                                    <span className="text-sm font-medium">{member.name || 'User'}</span>
+                                    <span className="text-xs text-muted-foreground">{member.email}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <Button type="submit" className="w-full" size="lg" disabled={loading || (splitExpense && groups.length === 0)}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Adding Expense...
+                      {splitExpense ? "Adding Shared Expense..." : "Adding Expense..."}
                     </>
                   ) : (
                     <>
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Expense
+                      {splitExpense ? "Add & Split Expense" : "Add Expense"}
                     </>
                   )}
                 </Button>
@@ -319,6 +437,12 @@ function AddExpense() {
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                   Our AI analyzes patterns to help you save money
                 </li>
+                {splitExpense && (
+                  <li className="flex items-start gap-2">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                    Split expenses are automatically tracked in your balances
+                  </li>
+                )}
               </ul>
             </CardContent>
           </Card>
@@ -329,4 +453,3 @@ function AddExpense() {
 }
 
 export default AddExpense;
-

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { apiService } from "../utils/api";
+import SearchModal from "./SearchModal";
 
 function Header({ setShowGroupModal }) {
   const navigate = useNavigate();
@@ -23,6 +24,10 @@ function Header({ setShowGroupModal }) {
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [addingMember, setAddingMember] = useState(false);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   useEffect(() => {
     const authToken = localStorage.getItem('authToken');
@@ -45,7 +50,7 @@ function Header({ setShowGroupModal }) {
       case '/dashboard': return 'Dashboard';
       case '/add-expense': return 'Expenses';
       case '/chat': return 'AI Assistant';
-      case '/budgets': return 'Budgets';
+      // case '/budgets': return 'Budgets';
       case '/settings': return 'Settings';
       default: return 'FinanceGuard';
     }
@@ -99,6 +104,7 @@ function Header({ setShowGroupModal }) {
       if (updatedGroup) {
         setSelectedGroup(updatedGroup);
       }
+      alert('Member added successfully!');
     } catch (error) {
       console.error('Error adding member:', error);
       alert(error.response?.data?.error || 'Failed to add member');
@@ -123,55 +129,75 @@ function Header({ setShowGroupModal }) {
     }
   };
 
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    if (query.trim()) {
+      setShowSearchModal(true);
+    } else {
+      setShowSearchModal(false);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-6 shadow-sm backdrop-blur-xl">
-      <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-lg font-semibold text-foreground">{getPageTitle()}</h1>
-        </div>
-
-        <div className="flex flex-1 items-center justify-end gap-x-4 lg:gap-x-6">
-          {/* Search Bar - Visual Only */}
-          <div className="hidden md:block relative max-w-md w-full">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search transactions..."
-              className="w-full bg-muted/50 pl-9 focus-visible:ring-primary"
-            />
+    <>
+      <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background/80 px-6 shadow-sm backdrop-blur-xl">
+        <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-semibold text-foreground">{getPageTitle()}</h1>
           </div>
-          {isAuthenticated && (
-            <div className="header-actions">
-              <button
-                className="my-groups-button"
-                onClick={toggleGroupsDropdown}
-                title="My Groups"
-              >
-                <Users size={18} />
-                <span>My Groups</span>
-              </button>
-              <button
-                className="create-group-button"
-                onClick={handleCreateGroup}
-                title="Create Group"
-              >
-                <Users size={18} />
-                <span>Create Group</span>
-              </button>
-              <button
-                className="logout-button"
-                onClick={handleLogout}
-                title="Logout"
-              >
-                <LogOut size={18} />
-                <span>Logout</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* My Groups Modal */}
+          <div className="flex flex-1 items-center justify-end gap-x-4 lg:gap-x-6">
+            {/* Search Bar */}
+            <div className="hidden md:block relative max-w-md w-full">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground z-10" />
+              <Input
+                type="search"
+                placeholder="Search transactions..."
+                className="w-full bg-muted/50 pl-9 focus-visible:ring-primary"
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+
+              {/* Search Dropdown */}
+              <SearchModal
+                isOpen={showSearchModal}
+                onClose={() => setShowSearchModal(false)}
+                searchQuery={searchQuery}
+              />
+            </div>
+            {isAuthenticated && (
+              <div className="header-actions">
+                <button
+                  className="my-groups-button"
+                  onClick={toggleGroupsDropdown}
+                  title="My Groups"
+                >
+                  <Users size={18} />
+                  <span>My Groups</span>
+                </button>
+                <button
+                  className="create-group-button"
+                  onClick={handleCreateGroup}
+                  title="Create Group"
+                >
+                  <Users size={18} />
+                  <span>Create Group</span>
+                </button>
+                <button
+                  className="logout-button"
+                  onClick={handleLogout}
+                  title="Logout"
+                >
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* My Groups Modal - Moved outside header for proper z-index */}
       {showGroupsDropdown && (
         <div className="modal-overlay" onClick={() => setShowGroupsDropdown(false)}>
           <div className="modal-content group-modal my-groups-modal" onClick={(e) => e.stopPropagation()}>
@@ -277,7 +303,7 @@ function Header({ setShowGroupModal }) {
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
 

@@ -7,7 +7,7 @@ function Navigation() {
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/add-expense", label: "Expenses", icon: Wallet },
     { path: "/chat", label: "AI Chat", icon: MessageSquare },
-    { path: "/budgets", label: "Budgets", icon: PieChart },
+    // { path: "/budgets", label: "Budgets", icon: PieChart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 

@@ -1427,6 +1427,7 @@ button[type="submit"]:disabled {
   font-weight: 700;
   color: #ffffff;
 }
+
 /* Header Actions and Group Buttons */
 .header-actions {
   display: flex;
@@ -1477,14 +1478,14 @@ button[type="submit"]:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   padding: 1rem;
 }
 
 /* Modal Content Wrapper - ensures proper positioning */
 .modal-content {
   position: relative;
-  z-index: 1001;
+  z-index: 10000;
 }
 
 .group-modal {
@@ -1828,12 +1829,12 @@ button[type="submit"]:disabled {
   flex-shrink: 0;
 }
 
-.checkbox-input:checked + .checkbox-custom {
+.checkbox-input:checked+.checkbox-custom {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
 }
 
-.checkbox-input:checked + .checkbox-custom::after {
+.checkbox-input:checked+.checkbox-custom::after {
   content: '';
   position: absolute;
   top: 50%;

@@ -1,5 +1,7 @@
 # FinanceGuard AI - Multi-Agent Intelligent Financial Assistant
 
+> **Note:** For the project presentation flow and feature breakdown, please see [README_PPT.md](./README_PPT.md).
+
 ## B.Tech Final Year Project MVP
 
 A web application showcasing AI-powered personal finance management with multi-agent collaboration.
@@ -72,7 +74,7 @@ The app comes pre-loaded with 8 sample transactions totaling ₹15,100:
 - Backend handles all AI logic and data processing
 - Frontend is minimal and functional (focus on backend intelligence)
 - Multi-agent system simulates collaboration between specialized AI agents
-- Real-time AI analysis of financial data
+- Real-time AI analysis
 
 ## Environment Variables
 

@@ -182,7 +182,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
         ticks: {
           color: '#94a3b8',
-          callback: function  (value) { return '₹' + value; }
+          callback: function (value) { return '₹' + value; }
         }
       },
       x: {
@@ -221,7 +221,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
           <p className="text-muted-foreground">Track your spending and get AI-powered insights</p>
         </div>
-        <div className="flex items-center gap-3">
+        {/* <div className="flex items-center gap-3">
           <Button
             onClick={handleScanReceipt}
             disabled={scanning}
@@ -233,7 +233,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           <Button onClick={loadDashboardData} variant="outline" size="icon">
             <ArrowUpRight className="h-4 w-4 rotate-45" />
           </Button>
-        </div>
+        </div> */}
       </div>
 
       {loading ? (
@@ -299,6 +299,81 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
               </CardContent>
             </Card>
           </div>
+
+          {/* Group Balances Section */}
+          {(amountOwed.totalOwed > 0 || owedByPerson.length > 0 || amountIOweByPerson.length > 0) && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {/* Amount People Owe You */}
+              <Card className="bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">People Owe You</CardTitle>
+                  <Users className="h-4 w-4 text-emerald-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-mono text-emerald-500">
+                    ₹{amountOwed.totalOwed?.toFixed(2) || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {amountOwed.expenseCount || 0} shared expense{amountOwed.expenseCount !== 1 ? 's' : ''}
+                  </p>
+                  {owedByPerson.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {owedByPerson.slice(0, 3).map((person, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground truncate">
+                            {person.name || person.email}
+                          </span>
+                          <span className="font-mono font-semibold text-emerald-500">
+                            ₹{person.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                      {owedByPerson.length > 3 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          +{owedByPerson.length - 3} more
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Amount You Owe Others */}
+              <Card className="bg-gradient-to-br from-rose-500/10 to-red-500/10 border-rose-500/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-foreground">You Owe Others</CardTitle>
+                  <Users className="h-4 w-4 text-rose-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold font-mono text-rose-500">
+                    ₹{amountIOweByPerson.reduce((sum, p) => sum + p.amount, 0).toFixed(2)}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {amountIOweByPerson.length} person{amountIOweByPerson.length !== 1 ? 's' : ''}
+                  </p>
+                  {amountIOweByPerson.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {amountIOweByPerson.slice(0, 3).map((person, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground truncate">
+                            {person.name || person.email}
+                          </span>
+                          <span className="font-mono font-semibold text-rose-500">
+                            ₹{person.amount.toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                      {amountIOweByPerson.length > 3 && (
+                        <p className="text-xs text-muted-foreground italic">
+                          +{amountIOweByPerson.length - 3} more
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4 bg-card border-border/50">

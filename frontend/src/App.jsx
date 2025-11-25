@@ -26,13 +26,13 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Login />} />
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
+        {/* <Route path="/login" element={<Login />} /> */}
         <Route path="/auth/callback" element={<AuthCallback />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
+          <Route element={<Layout setShowGroupModal={setShowGroupModal} />}>
             <Route
               path="/dashboard"
               element={
@@ -56,7 +56,7 @@ function App() {
             />
             <Route path="/chat" element={<AIChat />} />
             <Route path="/multi-agent" element={<MultiAgent />} />
-            <Route path="/budgets" element={<Budgets />} />
+            {/* <Route path="/budgets" element={<Budgets />} /> */}
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
@@ -64,6 +64,9 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
+      {/* Group Modal */}
+      <GroupModal isOpen={showGroupModal} onClose={() => setShowGroupModal(false)} />
     </Router>
   );
 }

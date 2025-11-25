@@ -3,12 +3,12 @@ import Header from "./Header";
 import Navigation from "./Navigation";
 import { Toaster } from "@/components/ui/sonner";
 
-function Layout() {
+function Layout({ setShowGroupModal }) {
     return (
         <div className="flex min-h-screen flex-col bg-background font-sans text-foreground md:flex-row">
             <Navigation />
             <div className="flex flex-1 flex-col overflow-hidden">
-                <Header />
+                <Header setShowGroupModal={setShowGroupModal} />
                 <main className="flex-1 overflow-y-auto p-4 md:p-8">
                     <Outlet />
                 </main>
