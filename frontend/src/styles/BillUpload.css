@@ -1,0 +1,476 @@
+.bill-upload-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.bill-upload-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.bill-upload-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.bill-upload-header p {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+/* Upload Zone */
+.upload-zone {
+    border: 3px dashed #d1d5db;
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    position: relative;
+}
+
+.upload-zone:hover {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    transform: translateY(-2px);
+}
+
+.upload-zone.drag-active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #eef2ff 0%, #ddd6fe 100%);
+    transform: scale(1.02);
+}
+
+.upload-zone svg {
+    color: #667eea;
+    margin-bottom: 1rem;
+}
+
+.upload-zone h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #1f2937;
+}
+
+.upload-zone p {
+    color: #6b7280;
+}
+
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Selected Files */
+.selected-files {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.selected-files h3 {
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.file-item:hover {
+    background: #f3f4f6;
+}
+
+.file-item svg {
+    color: #667eea;
+    flex-shrink: 0;
+}
+
+.file-item span {
+    flex: 1;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: #ef4444;
+    transition: all 0.2s ease;
+}
+
+.remove-btn:hover {
+    transform: scale(1.1);
+}
+
+.upload-btn {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+}
+
+.upload-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Uploaded Bills */
+.uploaded-bills {
+    margin-top: 3rem;
+}
+
+.uploaded-bills h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #1f2937;
+}
+
+.bills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Bill Card */
+.bill-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.bill-card:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+}
+
+.bill-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.bill-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+}
+
+.bill-info {
+    flex: 1;
+}
+
+.bill-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: #6b7280;
+    text-transform: capitalize;
+}
+
+.bill-merchant {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.bill-merchant strong {
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.bill-amount {
+    color: #667eea;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.fraud-score {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+/* Bill Card Details */
+.bill-card-details {
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.extracted-data {
+    margin-bottom: 1.5rem;
+}
+
+.extracted-data h4 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+}
+
+.data-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.data-item .label {
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.data-item .value {
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.data-item .value.total {
+    color: #667eea;
+    font-size: 1.2rem;
+}
+
+/* Items Section */
+.items-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.items-section h5 {
+    margin-bottom: 0.75rem;
+    color: #374151;
+}
+
+.items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+/* Fraud Analysis */
+.fraud-analysis {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.fraud-analysis h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    color: #92400e;
+}
+
+.fraud-score-detail {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.score-bar {
+    flex: 1;
+    height: 24px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.score-value {
+    font-weight: bold;
+    color: #92400e;
+}
+
+.fraud-flags {
+    margin-top: 1rem;
+}
+
+.fraud-flags strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+}
+
+.flags-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.flag {
+    padding: 0.25rem 0.75rem;
+    background: #dc2626;
+    color: white;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.fraud-warnings {
+    margin-top: 1rem;
+}
+
+.fraud-warnings strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+}
+
+.fraud-warnings ul {
+    margin-left: 1.5rem;
+    color: #78350f;
+}
+
+.fraud-warnings li {
+    margin-bottom: 0.25rem;
+}
+
+.validations {
+    margin-top: 1rem;
+}
+
+.validations strong {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #92400e;
+}
+
+.validation-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.validation {
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.validation.valid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.validation.invalid {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Bill Error */
+.bill-error {
+    padding: 1rem;
+    background: #fee2e2;
+    color: #991b1b;
+    border-radius: 8px;
+    margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .bills-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .validation-grid {
+        grid-template-columns: 1fr;
+    }
+}

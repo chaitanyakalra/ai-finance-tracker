@@ -69,6 +69,15 @@ export const API_ENDPOINTS = {
     BEHAVIORAL_INSIGHT: '/ai/behavioral-insight',
   },
   
+  // Bill endpoints
+  BILLS: {
+    BASE: '/bills',
+    UPLOAD: '/bills/upload',
+    GET_BILL: '/bills/analysis/:billId',
+    LIST: '/bills/list', // Updated to match backend /list route
+    DELETE: '/bills/:billId',
+  },
+  
   // Auth endpoints
   AUTH: {
     BASE: '/auth',

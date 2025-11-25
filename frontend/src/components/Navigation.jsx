@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessageSquare, PieChart, Settings, LogOut, Wallet } from "lucide-react";
+import { LayoutDashboard, MessageSquare, PieChart, Settings, LogOut, Wallet, Receipt } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -6,6 +6,7 @@ function Navigation() {
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/add-expense", label: "Expenses", icon: Wallet },
+    { id: "bill-upload", label: "Bill Upload", icon: <Receipt size={18} /> },
     { path: "/chat", label: "AI Chat", icon: MessageSquare },
     // { path: "/budgets", label: "Budgets", icon: PieChart },
     { path: "/settings", label: "Settings", icon: Settings },
