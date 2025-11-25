@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     const refreshToken = localStorage.getItem('refreshToken');
     const userId = localStorage.getItem('userId');
-    
+
     console.log('🌐 API Request Interceptor:', {
       url: config.url,
       method: config.method,
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
       tokenLength: token?.length,
       allLocalStorageKeys: Object.keys(localStorage)
     });
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('✅ API Request: Authorization header added');
@@ -57,7 +57,7 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           // Unauthorized - handle logout
@@ -82,7 +82,7 @@ apiClient.interceptors.response.use(
       // Something else happened
       console.error('Error setting up request', error.message);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -93,7 +93,7 @@ apiClient.interceptors.response.use(
  */
 export const apiService = {
   // ========== Expense Endpoints ==========
-  
+
   /**
    * Get all expenses
    */
@@ -157,6 +157,154 @@ export const apiService = {
    */
   getBehavioralInsight: () => {
     return apiClient.get(getEndpoint(API_ENDPOINTS.AI.BEHAVIORAL_INSIGHT));
+  },
+
+  // ========== Group Endpoints ==========
+
+  /**
+   * Create a new group
+   * @param {string} name - Group name
+   */
+  createGroup: (name) => {
+    return apiClient.post('/groups', { name });
+  },
+
+  /**
+   * Get all groups for the authenticated user
+   */
+  getUserGroups: () => {
+    return apiClient.get('/groups');
+  },
+
+  /**
+   * Get group by ID
+   * @param {string} groupId - Group ID
+   */
+  getGroupById: (groupId) => {
+    return apiClient.get(`/groups/${groupId}`);
+  },
+
+  /**
+   * Get group members with details
+   * @param {string} groupId - Group ID
+   */
+  getGroupMembers: (groupId) => {
+    return apiClient.get(`/groups/${groupId}/members`);
+  },
+
+  /**
+   * Add member to group by email
+   * @param {string} groupId - Group ID
+   * @param {string} email - Member's email address
+   */
+  addMemberByEmail: (groupId, email) => {
+    return apiClient.post(`/groups/${groupId}/members`, { email });
+  },
+
+  /**
+   * Remove member from group
+   * @param {string} groupId - Group ID
+   * @param {string} memberId - Member's user ID
+   */
+  removeMember: (groupId, memberId) => {
+    return apiClient.delete(`/groups/${groupId}/members/${memberId}`);
+  },
+
+  /**
+   * Update group name
+   * @param {string} groupId - Group ID
+   * @param {string} name - New group name
+   */
+  updateGroupName: (groupId, name) => {
+    return apiClient.put(`/groups/${groupId}/name`, { name });
+  },
+
+  /**
+   * Delete a group
+   * @param {string} groupId - Group ID
+   */
+  deleteGroup: (groupId) => {
+    return apiClient.delete(`/groups/${groupId}`);
+  },
+
+  // ========== Shared Expense Endpoints ==========
+
+  /**
+   * Create a shared expense (split among group members)
+   * @param {Object} expense - Shared expense data
+   * @param {string} expense.groupId - Group ID
+   * @param {string} expense.description - Expense description
+   * @param {number} expense.amount - Total expense amount
+   * @param {string} expense.category - Expense category
+   * @param {string} expense.date - Date in YYYY-MM-DD format
+   */
+  createSharedExpense: (expense) => {
+    return apiClient.post('/shared-expenses', {
+      ...expense,
+      amount: parseFloat(expense.amount),
+    });
+  },
+
+  /**
+   * Get all shared expenses for the authenticated user
+   */
+  getUserSharedExpenses: () => {
+    return apiClient.get('/shared-expenses');
+  },
+
+  /**
+   * Get all shared expenses for a specific group
+   * @param {string} groupId - Group ID
+   */
+  getGroupExpenses: (groupId) => {
+    return apiClient.get(`/shared-expenses/group/${groupId}`);
+  },
+
+  /**
+   * Get group balance
+   * @param {string} groupId - Group ID
+   */
+  getGroupBalance: (groupId) => {
+    return apiClient.get(`/shared-expenses/group/${groupId}/balance`);
+  },
+
+  /**
+   * Get total amount owed to user
+   */
+  getTotalAmountOwed: () => {
+    return apiClient.get('/shared-expenses/amount-owed');
+  },
+
+  /**
+   * Get breakdown of who owes money to the user
+   * Returns array of { userId, name, email, amount }
+   */
+  getAmountOwedByPerson: () => {
+    return apiClient.get('/shared-expenses/amount-owed-by-person');
+  },
+
+  /**
+   * Get breakdown of who the user owes money to
+   * Returns array of { userId, name, email, amount }
+   */
+  getAmountIOweByPerson: () => {
+    return apiClient.get('/shared-expenses/amount-i-owe-by-person');
+  },
+
+  /**
+   * Get shared expense by ID
+   * @param {string} expenseId - Expense ID
+   */
+  getSharedExpenseById: (expenseId) => {
+    return apiClient.get(`/shared-expenses/${expenseId}`);
+  },
+
+  /**
+   * Delete a shared expense
+   * @param {string} expenseId - Expense ID
+   */
+  deleteSharedExpense: (expenseId) => {
+    return apiClient.delete(`/shared-expenses/${expenseId}`);
   },
 };
 

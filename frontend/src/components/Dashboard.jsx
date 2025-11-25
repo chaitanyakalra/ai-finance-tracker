@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiService } from "../utils/api";
-import { Wallet, Receipt, TrendingUp, Calendar, Tag, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3 } from "lucide-react";
+import { Wallet, Receipt, TrendingUp, Calendar, Tag, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
@@ -10,16 +10,26 @@ ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tool
 function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, insight, setInsight }) {
   const [activeChart, setActiveChart] = useState('doughnut');
   const [insightLoading, setInsightLoading] = useState(false);
+  const [amountOwed, setAmountOwed] = useState({ totalOwed: 0, expenseCount: 0 });
+  const [owedByPerson, setOwedByPerson] = useState([]);
+  const [amountIOweByPerson, setAmountIOweByPerson] = useState([]);
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, recentRes] = await Promise.all([
+      const [statsRes, recentRes, owedRes, owedByPersonRes, iOweRes] = await Promise.all([
         apiService.getExpenseStats(),
-        apiService.getRecentExpenses()
+        apiService.getRecentExpenses(),
+        apiService.getTotalAmountOwed(),
+        apiService.getAmountOwedByPerson(),
+        apiService.getAmountIOweByPerson()
       ]);
-      
+
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
+      setAmountOwed(owedRes.data);
+      setOwedByPerson(owedByPersonRes.data);
+      setAmountIOweByPerson(iOweRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
@@ -85,6 +95,37 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     }]
   };
 
+  // Generate colors for people who owe money
+  const personColors = [
+    '#667eea', '#764ba2', '#f093fb', '#4facfe',
+    '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+    '#a8edea', '#fed6e3', '#c471f5', '#12c2e9'
+  ];
+
+  // Chart data for who owes you money
+  const owedByPersonData = {
+    labels: owedByPerson.map(person => person.name || person.email),
+    datasets: [{
+      data: owedByPerson.map(person => person.amount),
+      backgroundColor: owedByPerson.map((_, idx) => personColors[idx % personColors.length]),
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 2,
+      hoverOffset: 20
+    }]
+  };
+
+  // Chart data for who YOU owe money to
+  const amountIOweByPersonData = {
+    labels: amountIOweByPerson.map(person => person.name || person.email),
+    datasets: [{
+      data: amountIOweByPerson.map(person => person.amount),
+      backgroundColor: amountIOweByPerson.map((_, idx) => personColors[(idx + 5) % personColors.length]), // Offset colors
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 2,
+      hoverOffset: 20
+    }]
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -101,7 +142,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         borderWidth: 1,
         displayColors: true,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `₹${context.parsed.toFixed(2)}`;
           }
         }
@@ -119,7 +160,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         },
         ticks: {
           color: 'rgba(255, 255, 255, 0.6)',
-          callback: function(value) {
+          callback: function (value) {
             return '₹' + value;
           }
         }
@@ -137,7 +178,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
 
   return (
     <div className="dashboard" data-testid="dashboard-view">
-      <motion.div 
+      <motion.div
         className="dashboard-header"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -151,7 +192,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           <p className="page-subtitle">Track your spending and get AI-powered insights</p>
         </div>
       </motion.div>
-      
+
       {loading ? (
         <div className="loading-container" data-testid="loading-text">
           <Loader2 className="loading-spinner" />
@@ -160,8 +201,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
       ) : (
         <>
           <div className="stats-grid">
-            <motion.div 
-              className="stat-card stat-card-primary" 
+            <motion.div
+              className="stat-card stat-card-primary"
               data-testid="total-spending-card"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -183,9 +224,9 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 </div>
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="stat-card stat-card-secondary" 
+
+            <motion.div
+              className="stat-card stat-card-secondary"
               data-testid="expense-count-card"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -208,7 +249,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
               </div>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               className="stat-card stat-card-accent"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -230,10 +271,33 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 </div>
               </div>
             </motion.div>
+
+            <motion.div
+              className="stat-card stat-card-success"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              whileHover={{ scale: 1.02, y: -5 }}
+            >
+              <div className="stat-icon-wrapper">
+                <TrendingUp className="stat-icon" />
+              </div>
+              <div className="stat-content">
+                <h3>Amount Owed to You</h3>
+                <p className="stat-value">₹{amountOwed.totalOwed?.toFixed(2) || 0}</p>
+                <div className="stat-footer">
+                  <span className="stat-label">From {amountOwed.expenseCount || 0} shared expenses</span>
+                  <span className="stat-trend positive">
+                    <ArrowUpRight size={16} />
+                    Money to collect
+                  </span>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* Charts Section */}
-          <motion.div 
+          <motion.div
             className="charts-section"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -246,13 +310,13 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                   Spending Distribution
                 </h3>
                 <div className="chart-toggle">
-                  <button 
+                  <button
                     className={activeChart === 'doughnut' ? 'active' : ''}
                     onClick={() => setActiveChart('doughnut')}
                   >
                     <PieChart size={18} />
                   </button>
-                  <button 
+                  <button
                     className={activeChart === 'bar' ? 'active' : ''}
                     onClick={() => setActiveChart('bar')}
                   >
@@ -299,8 +363,88 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
             </div>
           </motion.div>
 
-          <motion.div 
-            className="category-breakdown" 
+          {/* Who Owes You Money Chart */}
+          {owedByPerson.length > 0 && (
+            <motion.div
+              className="charts-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.45 }}
+            >
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>
+                    <Users className="section-icon" />
+                    Who Owes You Money
+                  </h3>
+                </div>
+                <div className="chart-container">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ height: '300px' }}
+                  >
+                    <Doughnut data={owedByPersonData} options={chartOptions} />
+                  </motion.div>
+                </div>
+                <div className="chart-legend">
+                  {owedByPerson.map((person, idx) => (
+                    <div key={person.userId} className="legend-item">
+                      <span className="legend-color" style={{ background: personColors[idx % personColors.length] }}></span>
+                      <span className="legend-label">
+                        {person.name || person.email}
+                      </span>
+                      <span className="legend-value">₹{person.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Who YOU Owe Money To Chart */}
+          {amountIOweByPerson.length > 0 && (
+            <motion.div
+              className="charts-section"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.48 }}
+            >
+              <div className="chart-card">
+                <div className="chart-header">
+                  <h3>
+                    <Users className="section-icon" style={{ color: '#ef4444' }} />
+                    Who You Owe Money To
+                  </h3>
+                </div>
+                <div className="chart-container">
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ height: '300px' }}
+                  >
+                    <Doughnut data={amountIOweByPersonData} options={chartOptions} />
+                  </motion.div>
+                </div>
+                <div className="chart-legend">
+                  {amountIOweByPerson.map((person, idx) => (
+                    <div key={person.userId} className="legend-item">
+                      <span className="legend-color" style={{ background: personColors[(idx + 5) % personColors.length] }}></span>
+                      <span className="legend-label">
+                        {person.name || person.email}
+                      </span>
+                      <span className="legend-value" style={{ color: '#ef4444' }}>₹{person.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          <motion.div
+            className="category-breakdown"
             data-testid="category-breakdown"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -328,8 +472,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                     </div>
                   </div>
                   <div className="category-bar">
-                    <div 
-                      className="category-bar-fill" 
+                    <div
+                      className="category-bar-fill"
                       style={{
                         width: `${(amount / stats.total) * 100}%`,
                         background: categoryColors[category] || "#6b7280"
@@ -341,8 +485,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
             </div>
           </motion.div>
 
-          <motion.div 
-            className="recent-transactions" 
+          <motion.div
+            className="recent-transactions"
             data-testid="recent-transactions"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -357,9 +501,9 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
             </div>
             <div className="transaction-list">
               {recentExpenses.map((exp, idx) => (
-                <motion.div 
-                  key={exp.id || idx} 
-                  className="transaction-item" 
+                <motion.div
+                  key={exp.id || idx}
+                  className="transaction-item"
                   data-testid={`transaction-${idx}`}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -387,8 +531,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
             </div>
           </motion.div>
 
-          <motion.div 
-            className="insight-actions" 
+          <motion.div
+            className="insight-actions"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.7 }}
@@ -399,7 +543,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 AI Behavioral Insight
               </h3>
             </div>
-            <button 
+            <button
               className="chat-submit-button"
               onClick={handleGenerateInsight}
               disabled={insightLoading}
@@ -419,8 +563,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           </motion.div>
 
           {insight && (
-            <motion.div 
-              className="insight-card" 
+            <motion.div
+              className="insight-card"
               data-testid="insight-card"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}

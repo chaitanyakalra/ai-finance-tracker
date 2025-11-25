@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import Expense from '../models/Expense.js';
+import SharedExpense from '../models/SharedExpense.js';
+import Group from '../models/Group.js';
 
 export async function createExpense({ userId, date, amount, category, description }) {
   // Validate userId is provided
@@ -47,13 +49,24 @@ export async function getRecentExpenses(userId, limit = 10) {
 }
 
 export async function getExpenseStats(userId) {
-  // Get expenses filtered by userId
-  const expenses = await getAllExpenses(userId);
+  // Get personal expenses filtered by userId
+  const personalExpenses = await getAllExpenses(userId);
 
-  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+  // Get shared expenses where user is the creator
+  const groups = await Group.find({ 'members.userId': userId });
+  const groupIds = groups.map(g => g.id);
+  const sharedExpenses = await SharedExpense.find({
+    groupId: { $in: groupIds },
+    createdBy: userId
+  }).lean();
+
+  // Combine both types of expenses
+  const allExpenses = [...personalExpenses, ...sharedExpenses];
+
+  const total = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
   const byCategory = {};
-  expenses.forEach(exp => {
+  allExpenses.forEach(exp => {
     const cat = exp.category;
     byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
   });
@@ -61,6 +74,6 @@ export async function getExpenseStats(userId) {
   return {
     total,
     by_category: byCategory,
-    count: expenses.length
+    count: allExpenses.length
   };
 }

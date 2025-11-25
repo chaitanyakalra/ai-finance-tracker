@@ -9,6 +9,7 @@ import AIChat from "./components/AIChat";
 import MultiAgent from "./components/MultiAgent";
 import LandingPage from "./components/LandingPage";
 import AuthCallback from "./components/AuthCallback";
+import GroupModal from "./components/GroupModal";
 
 // Main App Content Component (needs to be inside Router)
 function AppContent() {
@@ -19,6 +20,7 @@ function AppContent() {
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [insight, setInsight] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
 
   // Check if user is on landing page
   const isLandingPage = location.pathname === '/';
@@ -41,7 +43,7 @@ function AppContent() {
   // Otherwise show main app
   return (
     <div className="App">
-      <Header />
+      <Header setShowGroupModal={setShowGroupModal} />
       <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
 
       <main className="main-content">
@@ -66,6 +68,8 @@ function AppContent() {
 
         {activeTab === "multi-agent" && <MultiAgent />}
       </main>
+
+      <GroupModal isOpen={showGroupModal} onClose={() => setShowGroupModal(false)} />
     </div>
   );
 }
