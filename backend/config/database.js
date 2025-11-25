@@ -1,35 +1,46 @@
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import { SAMPLE_EXPENSES } from '../utils/sampleData.js';
 import dotenv from 'dotenv';
+import Expense from '../models/Expense.js';
+
 dotenv.config();
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
 const dbName = process.env.DB_NAME || 'finance_tracker';
 
-let client;
-let db;
-
 export async function connectDB() {
   try {
-    client = new MongoClient(mongoUrl, { serverSelectionTimeoutMS: 5000 });
-    await client.connect();
-    db = client.db(dbName);
-    
-    await client.db('admin').command({ ping: 1 });
-    console.log(`✅ Connected to MongoDB at ${mongoUrl}`);
-    
-    // Initialize sample data if needed
-    const count = await db.collection('expenses').countDocuments({});
-    if (count === 0) {
-      const expensesWithTimestamp = SAMPLE_EXPENSES.map(expense => ({
-        ...expense,
-        created_at: new Date().toISOString()
-      }));
-      await db.collection('expenses').insertMany(expensesWithTimestamp);
-      console.log('✅ Sample expenses loaded');
-    } else {
-      console.log(`✅ Found ${count} existing expenses in database`);
+    // Ensure the connection string includes the database name
+    let connectionString = mongoUrl;
+    if (!connectionString.includes(dbName) && !connectionString.includes('?')) {
+      // If it ends with /, append dbName. If not, append /dbName
+      connectionString = connectionString.endsWith('/')
+        ? `${connectionString}${dbName}`
+        : `${connectionString}/${dbName}`;
     }
+
+    await mongoose.connect(connectionString);
+
+    console.log(`✅ Connected to MongoDB at ${connectionString}`);
+
+    // Initialize sample data if needed
+    try {
+      const count = await Expense.countDocuments();
+      if (count === 0) {
+        const expensesWithTimestamp = SAMPLE_EXPENSES.map(expense => ({
+          ...expense,
+          userId: 'demo-user', // Add default userId for sample data
+          created_at: new Date().toISOString()
+        }));
+        await Expense.insertMany(expensesWithTimestamp);
+        console.log('✅ Sample expenses loaded');
+      } else {
+        console.log(`✅ Found ${count} existing expenses in database`);
+      }
+    } catch (err) {
+      console.log('⚠️ Could not check/load sample data:', err.message);
+    }
+
     return true;
   } catch (error) {
     console.warn(`
@@ -48,19 +59,10 @@ export async function connectDB() {
 }
 
 export async function closeDB() {
-  if (client) {
-    await client.close();
-    console.log('MongoDB connection closed');
-  }
-}
-
-export function getDB() {
-  if (!db) {
-    throw new Error('Database not connected');
-  }
-  return db;
+  await mongoose.disconnect();
+  console.log('MongoDB connection closed');
 }
 
 export function isDBConnected() {
-  return !!db;
+  return mongoose.connection.readyState === 1;
 }

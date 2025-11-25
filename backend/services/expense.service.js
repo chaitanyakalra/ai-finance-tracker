@@ -1,65 +1,63 @@
 import { v4 as uuidv4 } from 'uuid';
-import { getDB } from '../config/database.js';
+import Expense from '../models/Expense.js';
 
 export async function createExpense({ userId, date, amount, category, description }) {
-  const db = getDB();
-  
   // Validate userId is provided
   if (!userId) {
     throw new Error('UserId is required to create an expense');
   }
-  
-  const expense = {
+
+  const expenseData = {
     id: uuidv4(),
     userId: String(userId), // Ensure userId is stored as string
     date,
     amount: parseFloat(amount),
     category,
     description,
-    created_at: new Date().toISOString()
+    // created_at is handled by timestamps in model
   };
-  
-  await db.collection('expenses').insertOne(expense);
-  return expense;
+
+  // Create and save the expense
+  const expense = await Expense.create(expenseData);
+
+  // Return plain object without mongoose internals if needed, or just the document
+  // Previous implementation returned the plain object inserted.
+  return expense.toObject ? expense.toObject() : expense;
 }
 
 export async function getAllExpenses(userId, limit = 1000) {
-  const db = getDB();
-  
   // Filter expenses by userId
-  const expenses = await db.collection('expenses')
-    .find({ userId }, { projection: { _id: 0 } })
+  const expenses = await Expense.find({ userId })
+    .select('-_id -__v') // Exclude internal fields to match previous behavior
     .limit(limit)
-    .toArray();
-  
+    .lean();
+
   return expenses;
 }
 
 export async function getRecentExpenses(userId, limit = 10) {
-  const db = getDB();
-  
   // Filter expenses by userId
-  const expenses = await db.collection('expenses')
-    .find({ userId }, { projection: { _id: 0 } })
+  const expenses = await Expense.find({ userId })
+    .select('-_id -__v')
     .sort({ date: -1 })
     .limit(limit)
-    .toArray();
-  
+    .lean();
+
   return expenses;
 }
 
 export async function getExpenseStats(userId) {
   // Get expenses filtered by userId
   const expenses = await getAllExpenses(userId);
-  
+
   const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-  
+
   const byCategory = {};
   expenses.forEach(exp => {
     const cat = exp.category;
     byCategory[cat] = (byCategory[cat] || 0) + exp.amount;
   });
-  
+
   return {
     total,
     by_category: byCategory,

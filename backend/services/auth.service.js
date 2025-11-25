@@ -1,5 +1,6 @@
-import { getDB } from '../config/database.js';
 import { v4 as uuidv4 } from 'uuid';
+import User from '../models/User.js';
+import RefreshToken from '../models/RefreshToken.js';
 
 /**
  * Find or create user from Google profile
@@ -11,47 +12,38 @@ import { v4 as uuidv4 } from 'uuid';
  * @returns {Promise<object>} User object
  */
 export async function findOrCreateUser(googleProfile) {
-  const db = getDB();
-  const usersCollection = db.collection('users');
-
   const { id: googleId, email, name, picture } = googleProfile;
 
   // Check if user exists by email
-  let user = await usersCollection.findOne({ email });
+  let user = await User.findOne({ email });
 
   if (user) {
     // Update Google ID and profile pic if not set
     if (!user.googleId) {
-      await usersCollection.updateOne(
-        { email },
-        { $set: { googleId, profilePic: picture || user.profilePic } }
-      );
       user.googleId = googleId;
       user.profilePic = picture || user.profilePic;
+      await user.save();
     }
     return user;
   }
 
   // Check if user exists by Google ID
-  user = await usersCollection.findOne({ googleId });
+  user = await User.findOne({ googleId });
 
   if (user) {
     return user;
   }
 
   // Create new user
-  const newUser = {
+  const newUser = await User.create({
     id: uuidv4(),
     googleId,
     email,
     name,
     profilePic: picture || null,
-    role: 'user', // default role
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+    role: 'user',
+  });
 
-  await usersCollection.insertOne(newUser);
   return newUser;
 }
 
@@ -62,18 +54,14 @@ export async function findOrCreateUser(googleProfile) {
  * @returns {Promise<void>}
  */
 export async function storeRefreshToken(userId, refreshToken) {
-  const db = getDB();
-  const refreshTokensCollection = db.collection('refreshTokens');
-
   // Store refresh token with expiry
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 7); // 7 days
 
-  await refreshTokensCollection.insertOne({
+  await RefreshToken.create({
     userId,
     token: refreshToken,
-    expiresAt: expiresAt.toISOString(),
-    createdAt: new Date().toISOString()
+    expiresAt: expiresAt
   });
 }
 
@@ -83,9 +71,7 @@ export async function storeRefreshToken(userId, refreshToken) {
  * @returns {Promise<void>}
  */
 export async function removeRefreshToken(refreshToken) {
-  const db = getDB();
-  const refreshTokensCollection = db.collection('refreshTokens');
-  await refreshTokensCollection.deleteOne({ token: refreshToken });
+  await RefreshToken.deleteOne({ token: refreshToken });
 }
 
 /**
@@ -94,21 +80,19 @@ export async function removeRefreshToken(refreshToken) {
  * @returns {Promise<object|null>} Token document or null
  */
 export async function verifyRefreshTokenInDB(refreshToken) {
-  const db = getDB();
-  const refreshTokensCollection = db.collection('refreshTokens');
-  
-  const tokenDoc = await refreshTokensCollection.findOne({ token: refreshToken });
-  
+  const tokenDoc = await RefreshToken.findOne({ token: refreshToken });
+
   if (!tokenDoc) {
     return null;
   }
 
   // Check if token is expired
   if (new Date(tokenDoc.expiresAt) < new Date()) {
-    await refreshTokensCollection.deleteOne({ token: refreshToken });
+    await RefreshToken.deleteOne({ token: refreshToken });
     return null;
   }
 
   return tokenDoc;
 }
+
 

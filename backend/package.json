@@ -25,6 +25,7 @@
     "googleapis": "^166.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.3.0",
+    "mongoose": "^9.0.0",
     "uuid": "^9.0.1"
   }
 }
