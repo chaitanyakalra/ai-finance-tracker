@@ -58,6 +58,7 @@ export const API_ENDPOINTS = {
     CREATE: '/expenses',
     RECENT: '/expenses/recent',
     STATS: '/expenses/stats',
+    MONTHLY: '/expenses/monthly',
   },
   
   // AI endpoints

@@ -21,7 +21,7 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('authToken');
     const refreshToken = localStorage.getItem('refreshToken');
     const userId = localStorage.getItem('userId');
-    
+
     console.log('🌐 API Request Interceptor:', {
       url: config.url,
       method: config.method,
@@ -31,7 +31,7 @@ apiClient.interceptors.request.use(
       tokenLength: token?.length,
       allLocalStorageKeys: Object.keys(localStorage)
     });
-    
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       console.log('✅ API Request: Authorization header added');
@@ -57,11 +57,15 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           // Unauthorized - handle logout
-          console.error('Unauthorized access');
+          console.error('Unauthorized access - Redirecting to login');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userId');
+          window.location.href = '/';
           break;
         case 403:
           console.error('Forbidden access');
@@ -82,7 +86,7 @@ apiClient.interceptors.response.use(
       // Something else happened
       console.error('Error setting up request', error.message);
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -93,7 +97,7 @@ apiClient.interceptors.response.use(
  */
 export const apiService = {
   // ========== Expense Endpoints ==========
-  
+
   /**
    * Get all expenses
    */
@@ -113,6 +117,13 @@ export const apiService = {
    */
   getExpenseStats: () => {
     return apiClient.get(getEndpoint(API_ENDPOINTS.EXPENSES.STATS));
+  },
+
+  /**
+   * Get monthly expense
+   */
+  getMonthlyExpense: () => {
+    return apiClient.get(getEndpoint(API_ENDPOINTS.EXPENSES.MONTHLY));
   },
 
   /**
@@ -164,6 +175,7 @@ export const apiService = {
 export const api = {
   getStats: () => apiService.getExpenseStats(),
   getRecent: () => apiService.getRecentExpenses(),
+  getMonthly: () => apiService.getMonthlyExpense(),
   getInsight: () => apiService.getBehavioralInsight(),
   addExpense: (expense) => apiService.createExpense(expense),
   chat: (question) => apiService.aiChat(question),

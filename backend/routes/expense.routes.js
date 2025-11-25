@@ -9,5 +9,6 @@ router.post('/', authenticateToken, expenseController.createExpense);
 router.get('/', authenticateToken, expenseController.getAllExpenses);
 router.get('/recent', authenticateToken, expenseController.getRecentExpenses);
 router.get('/stats', authenticateToken, expenseController.getExpenseStats);
+router.get('/monthly', authenticateToken, expenseController.getMonthlyExpense);
 
 export default router;

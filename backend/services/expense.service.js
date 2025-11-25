@@ -64,3 +64,22 @@ export async function getExpenseStats(userId) {
     count: expenses.length
   };
 }
+
+export async function getMonthlyExpense(userId) {
+  // Get expenses filtered by userId
+  const expenses = await getAllExpenses(userId);
+
+  const monthlyExpenses = expenses.reduce((acc, exp) => {
+    const dateObj = new Date(exp.date);
+    // Skip invalid dates
+    if (isNaN(dateObj.getTime())) return acc;
+
+    const month = dateObj.getMonth();
+    const year = dateObj.getFullYear();
+    const key = `${year}-${month}`;
+    acc[key] = (acc[key] || 0) + exp.amount;
+    return acc;
+  }, {});
+
+  return monthlyExpenses;
+}

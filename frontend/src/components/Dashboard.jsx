@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { apiService } from "../utils/api";
-import { Wallet, Receipt, TrendingUp, Calendar, Tag, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, Camera, ScanLine } from "lucide-react";
+import { Wallet, Receipt, TrendingUp, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, ScanLine } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { Doughnut, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
-ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
-function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, insight, setInsight }) {
+function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, monthlyExpenses, setMonthlyExpenses, insight, setInsight }) {
   const [activeChart, setActiveChart] = useState('doughnut');
   const [insightLoading, setInsightLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -19,13 +19,15 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, recentRes] = await Promise.all([
+      const [statsRes, recentRes, monthlyRes] = await Promise.all([
         apiService.getExpenseStats(),
-        apiService.getRecentExpenses()
+        apiService.getRecentExpenses(),
+        apiService.getMonthlyExpense()
       ]);
 
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
+      setMonthlyExpenses(monthlyRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
       toast.error("Failed to load dashboard data");
@@ -112,9 +114,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: {
-        display: false
-      },
+      legend: { display: false },
       tooltip: {
         backgroundColor: '#1e293b',
         padding: 12,
@@ -137,25 +137,39 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     scales: {
       y: {
         beginAtZero: true,
-        grid: {
-          color: 'rgba(255, 255, 255, 0.05)',
-        },
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
         ticks: {
           color: '#94a3b8',
-          callback: function (value) {
-            return '₹' + value;
-          }
+          callback: function (value) { return '₹' + value; }
         }
       },
       x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          color: '#94a3b8'
-        }
+        grid: { display: false },
+        ticks: { color: '#94a3b8' }
       }
     }
+  };
+
+  // Monthly Chart Data
+  const sortedMonths = Object.keys(monthlyExpenses || {}).sort();
+  const monthlyChartData = {
+    labels: sortedMonths.map(m => {
+      const [year, month] = m.split('-');
+      const date = new Date(parseInt(year), parseInt(month));
+      return date.toLocaleString('default', { month: 'short', year: '2-digit' });
+    }),
+    datasets: [{
+      label: 'Monthly Spending',
+      data: sortedMonths.map(m => monthlyExpenses[m]),
+      borderColor: '#00E5FF', // Cyan
+      backgroundColor: 'rgba(0, 229, 255, 0.1)', // Cyan with opacity
+      tension: 0.4,
+      fill: true,
+      pointBackgroundColor: '#00E5FF',
+      pointBorderColor: '#00E5FF',
+      pointRadius: 4,
+      pointHoverRadius: 6
+    }]
   };
 
   return (
@@ -276,7 +290,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
+                <div className="space-y-6 h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                   {recentExpenses.map((exp, idx) => (
                     <div key={exp.id || idx} className="flex items-center group cursor-pointer hover:bg-muted/30 p-2 rounded-lg transition-colors">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/50 group-hover:border-primary/50 transition-colors">
@@ -291,6 +305,31 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                       </div>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="">
+            <Card className="col-span-3 bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-foreground">Monthly Trends</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  Your spending over time.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pl-2">
+                <div className="h-[300px] w-full">
+                  <Line
+                    data={monthlyChartData}
+                    options={{
+                      ...barOptions,
+                      plugins: {
+                        ...barOptions.plugins,
+                        legend: { display: false }
+                      }
+                    }}
+                  />
                 </div>
               </CardContent>
             </Card>

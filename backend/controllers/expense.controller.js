@@ -68,6 +68,20 @@ export async function getRecentExpenses(req, res, next) {
   }
 }
 
+export async function getMonthlyExpense(req, res, next) {
+  try {
+    if (!checkDB(res)) return;
+    
+    // Extract userId from JWT token (set by authenticateToken middleware)
+    const userId = req.userId;
+    
+    const expenses = await expenseService.getMonthlyExpense(userId);
+    res.json(expenses);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getExpenseStats(req, res, next) {
   try {
     if (!checkDB(res)) return;
