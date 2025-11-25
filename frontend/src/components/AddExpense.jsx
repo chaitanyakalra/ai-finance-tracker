@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiService } from "../utils/api";
-import { PlusCircle, Calendar, DollarSign, Tag, FileText, CheckCircle, Loader2, Lightbulb } from "lucide-react";
+import { PlusCircle, Calendar, DollarSign, Tag, FileText, CheckCircle, Loader2, Lightbulb, Users, UserCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -19,16 +19,144 @@ function AddExpense() {
     description: ""
   });
 
+  const [splitExpense, setSplitExpense] = useState(false);
+  const [groups, setGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
+  const [loadingGroups, setLoadingGroups] = useState(false);
+
+  // Split options: 'equal' or 'select'
+  const [splitType, setSplitType] = useState('equal');
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [groupMembers, setGroupMembers] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+
+  // Fetch groups when split expense is enabled
+  useEffect(() => {
+    if (splitExpense) {
+      fetchGroups();
+    } else {
+      // Reset when unchecked
+      setSelectedGroup("");
+      setSplitType('equal');
+      setSelectedMembers([]);
+      setGroupMembers([]);
+    }
+  }, [splitExpense]);
+
+  // Fetch group members when group is selected
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchGroupMembers();
+    }
+  }, [selectedGroup]);
+
+  const fetchGroups = async () => {
+    setLoadingGroups(true);
+    try {
+      const response = await apiService.getUserGroups();
+      setGroups(response.data);
+      if (response.data.length > 0) {
+        setSelectedGroup(response.data[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching groups:", error);
+      alert("Failed to load groups");
+    } finally {
+      setLoadingGroups(false);
+    }
+  };
+
+
+  const fetchGroupMembers = async () => {
+    setLoadingMembers(true);
+    try {
+      const response = await apiService.getGroupMembers(selectedGroup);
+      const currentUserId = localStorage.getItem('userId');
+
+      // Filter out the current user - they can't owe themselves money!
+      const otherMembers = (response.data.members || []).filter(
+        member => member.userId !== currentUserId
+      );
+
+      setGroupMembers(otherMembers);
+
+      // Pre-select all OTHER members for equal split (excluding yourself)
+      if (splitType === 'equal') {
+        setSelectedMembers(otherMembers.map(m => m.userId));
+      }
+    } catch (error) {
+      console.error("Error fetching group members:", error);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const toggleMemberSelection = (userId) => {
+    setSelectedMembers(prev => {
+      if (prev.includes(userId)) {
+        return prev.filter(id => id !== userId);
+      } else {
+        return [...prev, userId];
+      }
+    });
+  };
+
+  const handleSplitTypeChange = (type) => {
+    setSplitType(type);
+    if (type === 'equal') {
+      // Select all members
+      setSelectedMembers(groupMembers.map(m => m.userId));
+    } else if (type === 'full') {
+      // Clear selection - user will select ONE person
+      setSelectedMembers([]);
+    } else {
+      // Clear selection for manual selection
+      setSelectedMembers([]);
+    }
+  };
+
   const handleAddExpense = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await apiService.createExpense({
-        ...newExpense,
-        amount: parseFloat(newExpense.amount)
-      });
+      if (splitExpense && selectedGroup) {
+        // Validate member selection for custom split
+        if (splitType === 'select' && selectedMembers.length === 0) {
+          alert("Please select at least one member to split with");
+          setLoading(false);
+          return;
+        }
 
-      toast.success("Expense added successfully!");
+        // Validate member selection for full amount
+        if (splitType === 'full' && selectedMembers.length !== 1) {
+          alert("Please select exactly one person who owes the full amount");
+          setLoading(false);
+          return;
+        }
+
+        // Create shared expense
+        await apiService.createSharedExpense({
+          groupId: selectedGroup,
+          ...newExpense,
+          amount: parseFloat(newExpense.amount),
+          splitType,
+          selectedMembers: (splitType === 'select' || splitType === 'full') ? selectedMembers : []
+        });
+
+        const memberText = splitType === 'equal'
+          ? 'all group members'
+          : splitType === 'full'
+            ? '1 person (full amount)'
+            : `${selectedMembers.length} selected member(s)`;
+        alert(`Shared expense created and split among ${memberText}!`);
+      } else {
+        // Create regular expense
+        await apiService.createExpense({
+          ...newExpense,
+          amount: parseFloat(newExpense.amount)
+        });
+        alert("Expense added successfully!");
+      }
 
       setNewExpense({
         date: new Date().toISOString().split('T')[0],
@@ -36,13 +164,14 @@ function AddExpense() {
         category: "Food",
         description: ""
       });
+      setSplitExpense(false);
+      setSelectedGroup("");
 
-      // Navigate to dashboard after successful addition
-      setTimeout(() => navigate("/dashboard"), 1000);
-
+      setActiveTab("dashboard");
     } catch (error) {
       console.error("Error adding expense:", error);
-      toast.error("Failed to add expense");
+      const errorMessage = error.response?.data?.error || "Failed to add expense";
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -58,8 +187,13 @@ function AddExpense() {
   ];
 
   return (
-    <div className="h-full flex flex-col space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="add-expense" data-testid="add-expense-view">
+      <motion.div
+        className="page-header"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <PlusCircle className="h-8 w-8 text-primary" />

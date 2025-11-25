@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiService } from "../utils/api";
-import { Wallet, Receipt, TrendingUp, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, ScanLine } from "lucide-react";
+import { Wallet, Receipt, TrendingUp, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, ScanLine, Users } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
@@ -16,18 +16,29 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
   const [insightLoading, setInsightLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
 
+  const [amountOwed, setAmountOwed] = useState({ totalOwed: 0, expenseCount: 0 });
+  const [owedByPerson, setOwedByPerson] = useState([]);
+  const [amountIOweByPerson, setAmountIOweByPerson] = useState([]);
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, recentRes, monthlyRes] = await Promise.all([
+      const [statsRes, recentRes, monthlyRes, owedRes, owedByPersonRes, iOweRes] = await Promise.all([
         apiService.getExpenseStats(),
         apiService.getRecentExpenses(),
-        apiService.getMonthlyExpense()
+        apiService.getMonthlyExpense(),
+        apiService.getTotalAmountOwed(),
+        apiService.getAmountOwedByPerson(),
+        apiService.getAmountIOweByPerson()
       ]);
+
 
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
       setMonthlyExpenses(monthlyRes.data);
+      setAmountOwed(owedRes.data);
+      setOwedByPerson(owedByPersonRes.data);
+      setAmountIOweByPerson(iOweRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
       toast.error("Failed to load dashboard data");
@@ -110,6 +121,37 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     }]
   };
 
+  // Generate colors for people who owe money
+  const personColors = [
+    '#667eea', '#764ba2', '#f093fb', '#4facfe',
+    '#43e97b', '#fa709a', '#fee140', '#30cfd0',
+    '#a8edea', '#fed6e3', '#c471f5', '#12c2e9'
+  ];
+
+  // Chart data for who owes you money
+  const owedByPersonData = {
+    labels: owedByPerson.map(person => person.name || person.email),
+    datasets: [{
+      data: owedByPerson.map(person => person.amount),
+      backgroundColor: owedByPerson.map((_, idx) => personColors[idx % personColors.length]),
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 2,
+      hoverOffset: 20
+    }]
+  };
+
+  // Chart data for who YOU owe money to
+  const amountIOweByPersonData = {
+    labels: amountIOweByPerson.map(person => person.name || person.email),
+    datasets: [{
+      data: amountIOweByPerson.map(person => person.amount),
+      backgroundColor: amountIOweByPerson.map((_, idx) => personColors[(idx + 5) % personColors.length]), // Offset colors
+      borderColor: 'rgba(255, 255, 255, 0.1)',
+      borderWidth: 2,
+      hoverOffset: 20
+    }]
+  };
+
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -140,7 +182,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
         ticks: {
           color: '#94a3b8',
-          callback: function (value) { return '₹' + value; }
+          callback: function  (value) { return '₹' + value; }
         }
       },
       x: {

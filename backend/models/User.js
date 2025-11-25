@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema({
     name: { type: String },
     profilePic: { type: String },
     role: { type: String, default: 'user' },
+    isTeacher: { type: Boolean, default: false },
+    isStudent: { type: Boolean, default: false },
+    hasAwardedGrant: { type: Boolean, default: false },
+    hasReceivedGrant: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);

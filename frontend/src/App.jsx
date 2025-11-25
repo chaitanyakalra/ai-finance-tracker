@@ -8,6 +8,7 @@ import AIChat from "./components/AIChat";
 import MultiAgent from "./components/MultiAgent";
 import LandingPage from "./components/LandingPage";
 import AuthCallback from "./components/AuthCallback";
+import GroupModal from "./components/GroupModal";
 import Budgets from "./components/Budgets";
 import Settings from "./components/Settings";
 import Login from "./components/Login";
@@ -18,6 +19,7 @@ function App() {
   const [recentExpenses, setRecentExpenses] = useState([]);
   const [insight, setInsight] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showGroupModal, setShowGroupModal] = useState(false);
   const [monthlyExpenses, setMonthlyExpenses] = useState({});
 
   return (
