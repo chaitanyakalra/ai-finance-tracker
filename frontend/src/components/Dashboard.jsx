@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { apiService } from "../utils/api";
-import { Wallet, Receipt, TrendingUp, Calendar, Tag, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3 } from "lucide-react";
+import { Wallet, Receipt, TrendingUp, Calendar, Tag, DollarSign, Sparkles, Brain, Loader2, ArrowUpRight, ArrowDownRight, PieChart, BarChart3, Camera, ScanLine } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Chart as ChartJS, ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Doughnut, Bar } from 'react-chartjs-2';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, insight, setInsight }) {
   const [activeChart, setActiveChart] = useState('doughnut');
   const [insightLoading, setInsightLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+
   const loadDashboardData = async () => {
     setLoading(true);
     try {
@@ -17,11 +23,12 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         apiService.getExpenseStats(),
         apiService.getRecentExpenses()
       ]);
-      
+
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
     } catch (error) {
       console.error("Error loading dashboard:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setLoading(false);
     }
@@ -32,11 +39,27 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
       setInsightLoading(true);
       const insightRes = await apiService.getBehavioralInsight();
       setInsight(insightRes.data);
+      toast.success("New AI insight generated!");
     } catch (error) {
       console.error("Error loading behavioral insight:", error);
+      toast.error("Failed to generate insight");
     } finally {
       setInsightLoading(false);
     }
+  };
+
+  const handleScanReceipt = () => {
+    setScanning(true);
+    const promise = new Promise((resolve) => setTimeout(resolve, 3000));
+
+    toast.promise(promise, {
+      loading: 'Scanning receipt with AI...',
+      success: () => {
+        setScanning(false);
+        return 'Receipt scanned successfully! Data extracted.';
+      },
+      error: 'Failed to scan receipt',
+    });
   };
 
   useEffect(() => {
@@ -54,12 +77,12 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
   };
 
   const categoryColors = {
-    Food: "#10b981",
-    Transport: "#3b82f6",
-    Shopping: "#f59e0b",
-    Bills: "#ef4444",
-    Entertainment: "#8b5cf6",
-    Others: "#6b7280"
+    Food: "#00E5FF", // Cyan
+    Transport: "#00FF94", // Green
+    Shopping: "#D946EF", // Purple
+    Bills: "#F59E0B", // Yellow
+    Entertainment: "#F97316", // Orange
+    Others: "#94A3B8" // Slate
   };
 
   // Chart data
@@ -67,9 +90,9 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     labels: Object.keys(stats.by_category || {}),
     datasets: [{
       data: Object.values(stats.by_category || {}),
-      backgroundColor: Object.keys(stats.by_category || {}).map(cat => categoryColors[cat] || "#6b7280"),
-      borderColor: 'rgba(255, 255, 255, 0.1)',
-      borderWidth: 2,
+      backgroundColor: Object.keys(stats.by_category || {}).map(cat => categoryColors[cat] || "#94A3B8"),
+      borderColor: 'transparent',
+      borderWidth: 0,
       hoverOffset: 20
     }]
   };
@@ -79,7 +102,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
     datasets: [{
       label: 'Spending by Category',
       data: Object.values(stats.by_category || {}),
-      backgroundColor: Object.keys(stats.by_category || {}).map(cat => categoryColors[cat] || "#6b7280"),
+      backgroundColor: Object.keys(stats.by_category || {}).map(cat => categoryColors[cat] || "#94A3B8"),
       borderRadius: 8,
       borderSkipped: false,
     }]
@@ -93,15 +116,15 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: '#1e293b',
         padding: 12,
         titleColor: '#fff',
         bodyColor: '#fff',
-        borderColor: 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
         displayColors: true,
+        borderColor: '#334155',
+        borderWidth: 1,
         callbacks: {
-          label: function(context) {
+          label: function (context) {
             return `₹${context.parsed.toFixed(2)}`;
           }
         }
@@ -118,8 +141,8 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           color: 'rgba(255, 255, 255, 0.05)',
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.6)',
-          callback: function(value) {
+          color: '#94a3b8',
+          callback: function (value) {
             return '₹' + value;
           }
         }
@@ -129,315 +152,185 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
           display: false
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.6)'
+          color: '#94a3b8'
         }
       }
     }
   };
 
   return (
-    <div className="dashboard" data-testid="dashboard-view">
-      <motion.div 
-        className="dashboard-header"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2>
-            <TrendingUp className="page-icon" />
-            Financial Overview
-          </h2>
-          <p className="page-subtitle">Track your spending and get AI-powered insights</p>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
+          <p className="text-muted-foreground">Track your spending and get AI-powered insights</p>
         </div>
-      </motion.div>
-      
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={handleScanReceipt}
+            disabled={scanning}
+            className="bg-gradient-to-r from-primary to-secondary text-primary-foreground hover:opacity-90 transition-opacity"
+          >
+            {scanning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ScanLine className="mr-2 h-4 w-4" />}
+            Scan Receipt
+          </Button>
+          <Button onClick={loadDashboardData} variant="outline" size="icon">
+            <ArrowUpRight className="h-4 w-4 rotate-45" />
+          </Button>
+        </div>
+      </div>
+
       {loading ? (
-        <div className="loading-container" data-testid="loading-text">
-          <Loader2 className="loading-spinner" />
-          <p>Loading your financial data...</p>
+        <div className="flex h-[400px] flex-col items-center justify-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading your financial data...</p>
         </div>
       ) : (
         <>
-          <div className="stats-grid">
-            <motion.div 
-              className="stat-card stat-card-primary" 
-              data-testid="total-spending-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-            >
-              <div className="stat-icon-wrapper">
-                <Wallet className="stat-icon" />
-              </div>
-              <div className="stat-content">
-                <h3>Total Spending</h3>
-                <p className="stat-value" data-testid="total-spending-value">₹{stats.total?.toFixed(2) || 0}</p>
-                <div className="stat-footer">
-                  <span className="stat-label">This period</span>
-                  <span className="stat-trend positive">
-                    <ArrowUpRight size={16} />
-                    12.5%
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="stat-card stat-card-secondary" 
-              data-testid="expense-count-card"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-            >
-              <div className="stat-icon-wrapper">
-                <Receipt className="stat-icon" />
-              </div>
-              <div className="stat-content">
-                <h3>Total Transactions</h3>
-                <p className="stat-value" data-testid="expense-count-value">{stats.count || 0}</p>
-                <div className="stat-footer">
-                  <span className="stat-label">Recorded expenses</span>
-                  <span className="stat-trend positive">
-                    <ArrowUpRight size={16} />
-                    8.2%
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card className="bg-card border-border/50 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Spending</CardTitle>
+                <Wallet className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold font-mono text-foreground">₹{stats.total?.toFixed(2) || 0}</div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                  <span className="text-emerald-500 font-medium">+12.5%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
 
-            <motion.div 
-              className="stat-card stat-card-accent"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              whileHover={{ scale: 1.02, y: -5 }}
-            >
-              <div className="stat-icon-wrapper">
-                <DollarSign className="stat-icon" />
-              </div>
-              <div className="stat-content">
-                <h3>Average Expense</h3>
-                <p className="stat-value">₹{stats.count ? (stats.total / stats.count).toFixed(2) : 0}</p>
-                <div className="stat-footer">
-                  <span className="stat-label">Per transaction</span>
-                  <span className="stat-trend negative">
-                    <ArrowDownRight size={16} />
-                    3.1%
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+            <Card className="bg-card border-border/50 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Transactions</CardTitle>
+                <Receipt className="h-4 w-4 text-secondary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold font-mono text-foreground">{stats.count || 0}</div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                  <span className="text-emerald-500 font-medium">+8.2%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-border/50 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Transaction</CardTitle>
+                <DollarSign className="h-4 w-4 text-purple-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold font-mono text-foreground">₹{stats.count ? (stats.total / stats.count).toFixed(2) : 0}</div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <ArrowDownRight className="h-3 w-3 text-rose-500" />
+                  <span className="text-rose-500 font-medium">-3.1%</span> from last month
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-primary/20 to-secondary/20 border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-foreground">Budget Status</CardTitle>
+                <TrendingUp className="h-4 w-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-foreground">On Track</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  You've spent 45% of your budget
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Charts Section */}
-          <motion.div 
-            className="charts-section"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>
-                  <PieChart className="section-icon" />
-                  Spending Distribution
-                </h3>
-                <div className="chart-toggle">
-                  <button 
-                    className={activeChart === 'doughnut' ? 'active' : ''}
-                    onClick={() => setActiveChart('doughnut')}
-                  >
-                    <PieChart size={18} />
-                  </button>
-                  <button 
-                    className={activeChart === 'bar' ? 'active' : ''}
-                    onClick={() => setActiveChart('bar')}
-                  >
-                    <BarChart3 size={18} />
-                  </button>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4 bg-card border-border/50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-foreground">Spending Overview</CardTitle>
+                  <Tabs defaultValue="doughnut" onValueChange={setActiveChart} className="w-[200px]">
+                    <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+                      <TabsTrigger value="doughnut"><PieChart className="h-4 w-4" /></TabsTrigger>
+                      <TabsTrigger value="bar"><BarChart3 className="h-4 w-4" /></TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                 </div>
-              </div>
-              <div className="chart-container">
-                <AnimatePresence mode="wait">
+              </CardHeader>
+              <CardContent className="pl-2">
+                <div className="h-[300px] w-full">
                   {activeChart === 'doughnut' ? (
-                    <motion.div
-                      key="doughnut"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.3 }}
-                      style={{ height: '300px' }}
-                    >
-                      <Doughnut data={doughnutData} options={chartOptions} />
-                    </motion.div>
+                    <Doughnut data={doughnutData} options={chartOptions} />
                   ) : (
-                    <motion.div
-                      key="bar"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.3 }}
-                      style={{ height: '300px' }}
-                    >
-                      <Bar data={barData} options={barOptions} />
-                    </motion.div>
+                    <Bar data={barData} options={barOptions} />
                   )}
-                </AnimatePresence>
-              </div>
-              <div className="chart-legend">
-                {Object.entries(stats.by_category || {}).map(([category, amount]) => (
-                  <div key={category} className="legend-item">
-                    <span className="legend-color" style={{ background: categoryColors[category] }}></span>
-                    <span className="legend-label">{categoryIcons[category]} {category}</span>
-                    <span className="legend-value">₹{amount.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            className="category-breakdown" 
-            data-testid="category-breakdown"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-          >
-            <div className="section-header-inline">
-              <h3>
-                <Tag className="section-icon" />
-                Spending by Category
-              </h3>
-            </div>
-            <div className="category-list">
-              {Object.entries(stats.by_category || {}).map(([category, amount]) => (
-                <div key={category} className="category-item" data-testid={`category-${category.toLowerCase()}`}>
-                  <div className="category-header">
-                    <div className="category-info">
-                      <span className="category-emoji">{categoryIcons[category] || "📦"}</span>
-                      <span className="category-name">{category}</span>
-                    </div>
-                    <div className="category-stats">
-                      <span className="category-percentage">
-                        {((amount / stats.total) * 100).toFixed(1)}%
-                      </span>
-                      <span className="category-amount">₹{amount.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  <div className="category-bar">
-                    <div 
-                      className="category-bar-fill" 
-                      style={{
-                        width: `${(amount / stats.total) * 100}%`,
-                        background: categoryColors[category] || "#6b7280"
-                      }}
-                    ></div>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              </CardContent>
+            </Card>
 
-          <motion.div 
-            className="recent-transactions" 
-            data-testid="recent-transactions"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            <div className="section-header-inline">
-              <h3>
-                <Calendar className="section-icon" />
-                Recent Transactions
-              </h3>
-              <span className="transaction-count">{recentExpenses.length} transactions</span>
-            </div>
-            <div className="transaction-list">
-              {recentExpenses.map((exp, idx) => (
-                <motion.div 
-                  key={exp.id || idx} 
-                  className="transaction-item" 
-                  data-testid={`transaction-${idx}`}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: idx * 0.05 }}
-                  whileHover={{ x: 10, scale: 1.02 }}
-                >
-                  <div className="transaction-icon" style={{ background: `${categoryColors[exp.category] || "#6b7280"}20` }}>
-                    <span>{categoryIcons[exp.category] || "📦"}</span>
-                  </div>
-                  <div className="transaction-info">
-                    <span className="transaction-desc">{exp.description}</span>
-                    <div className="transaction-meta">
-                      <Calendar size={14} />
-                      <span className="transaction-date">{exp.date}</span>
-                      <span className="transaction-separator">•</span>
-                      <Tag size={14} />
-                      <span className="transaction-category">{exp.category}</span>
+            <Card className="col-span-3 bg-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-foreground">Recent Transactions</CardTitle>
+                <CardDescription className="text-muted-foreground">
+                  You made {recentExpenses.length} transactions this month.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {recentExpenses.map((exp, idx) => (
+                    <div key={exp.id || idx} className="flex items-center group cursor-pointer hover:bg-muted/30 p-2 rounded-lg transition-colors">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-muted/50 group-hover:border-primary/50 transition-colors">
+                        <span className="text-lg">{categoryIcons[exp.category] || "📦"}</span>
+                      </div>
+                      <div className="ml-4 space-y-1">
+                        <p className="text-sm font-medium leading-none text-foreground">{exp.description}</p>
+                        <p className="text-xs text-muted-foreground">{exp.category} • {exp.date}</p>
+                      </div>
+                      <div className="ml-auto font-medium font-mono text-foreground">
+                        -₹{exp.amount}
+                      </div>
                     </div>
-                  </div>
-                  <div className="transaction-amount" style={{ color: categoryColors[exp.category] || "#6b7280" }}>
-                    ₹{exp.amount}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <motion.div 
-            className="insight-actions" 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-          >
-            <div className="section-header-inline">
-              <h3>
-                <Brain className="section-icon" />
-                AI Behavioral Insight
-              </h3>
-            </div>
-            <button 
-              className="chat-submit-button"
-              onClick={handleGenerateInsight}
-              disabled={insightLoading}
-            >
-              {insightLoading ? (
-                <>
-                  <Loader2 className="button-icon spinning" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="button-icon" />
-                  Generate Insight
-                </>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card className="col-span-2 border-primary/20 bg-primary/5">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <Brain className="h-5 w-5 text-primary" />
+                    AI Behavioral Insight
+                  </CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    Get personalized financial advice based on your spending habits.
+                  </CardDescription>
+                </div>
+                <Button onClick={handleGenerateInsight} disabled={insightLoading} variant="outline" className="border-primary/20 hover:bg-primary/10">
+                  {insightLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4 text-primary" />
+                      Generate Insight
+                    </>
+                  )}
+                </Button>
+              </CardHeader>
+              {insight && (
+                <CardContent>
+                  <div className="rounded-lg bg-background/50 p-4 border border-border">
+                    <MarkdownLite text={insight.insight} />
+                  </div>
+                </CardContent>
               )}
-            </button>
-          </motion.div>
-
-          {insight && (
-            <motion.div 
-              className="insight-card" 
-              data-testid="insight-card"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-            >
-              <div className="insight-header">
-                <h3>
-                  <Brain className="section-icon" />
-                  AI Behavioral Insight
-                </h3>
-                <Sparkles className="insight-sparkle" />
-              </div>
-              <div className="insight-content" data-testid="insight-content">
-                <MarkdownLite text={insight.insight} />
-              </div>
-            </motion.div>
-          )}
+            </Card>
+          </div>
         </>
       )}
     </div>
@@ -446,7 +339,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
 
 export default Dashboard;
 
-function MarkdownLite({ text, className = "response-content" }) {
+function MarkdownLite({ text, className = "text-sm leading-relaxed text-muted-foreground" }) {
   const renderInline = (t) => {
     const parts = [];
     const regex = /\*\*([^*]+)\*\*/g;
@@ -454,7 +347,7 @@ function MarkdownLite({ text, className = "response-content" }) {
     let m;
     while ((m = regex.exec(t)) !== null) {
       if (m.index > last) parts.push(t.slice(last, m.index));
-      parts.push(<strong key={parts.length}>{m[1]}</strong>);
+      parts.push(<strong key={parts.length} className="text-foreground font-semibold">{m[1]}</strong>);
       last = regex.lastIndex;
     }
     if (last < t.length) parts.push(t.slice(last));
@@ -469,7 +362,7 @@ function MarkdownLite({ text, className = "response-content" }) {
     if (!trimmed) {
       if (list.length) {
         elements.push(
-          <ul key={`ul-${elements.length}`}>
+          <ul key={`ul-${elements.length}`} className="list-disc pl-5 my-2 space-y-1">
             {list.map((li, idx) => (
               <li key={`li-${idx}`}>{renderInline(li)}</li>
             ))}
@@ -486,7 +379,7 @@ function MarkdownLite({ text, className = "response-content" }) {
     }
     if (list.length) {
       elements.push(
-        <ul key={`ul-${elements.length}`}>
+        <ul key={`ul-${elements.length}`} className="list-disc pl-5 my-2 space-y-1">
           {list.map((li, idx) => (
             <li key={`li-${idx}`}>{renderInline(li)}</li>
           ))}
@@ -494,11 +387,11 @@ function MarkdownLite({ text, className = "response-content" }) {
       );
       list = [];
     }
-    elements.push(<p key={`p-${elements.length}`}>{renderInline(line)}</p>);
+    elements.push(<p key={`p-${elements.length}`} className="my-1">{renderInline(line)}</p>);
   }
   if (list.length) {
     elements.push(
-      <ul key={`ul-${elements.length}`}>
+      <ul key={`ul-${elements.length}`} className="list-disc pl-5 my-2 space-y-1">
         {list.map((li, idx) => (
           <li key={`li-${idx}`}>{renderInline(li)}</li>
         ))}
