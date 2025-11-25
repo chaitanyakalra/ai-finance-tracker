@@ -91,7 +91,7 @@ export async function getMyGrantsController(req, res) {
 
         // Determine role based on user flags
         let role = null;
-        
+
         if (user.isTeacher || user.hasAwardedGrant) {
             role = 'faculty';
         } else if (user.isStudent || user.hasReceivedGrant) {
@@ -204,6 +204,10 @@ export async function getActiveGrantController(req, res) {
         // Get active grant
         const result = await getStudentActiveGrant(user._id);
         if (!result.success) {
+            // If no active grant, return null instead of 404 to avoid frontend errors
+            if (result.error === 'No active grant found') {
+                return res.json({ grant: null });
+            }
             return res.status(404).json({ error: result.error });
         }
 

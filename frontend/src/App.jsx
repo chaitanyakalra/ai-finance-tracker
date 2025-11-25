@@ -56,6 +56,7 @@ function App() {
               path="/add-expense"
               element={<AddExpense setLoading={setLoading} loading={loading} />}
             />
+            <Route path="/bill-upload" element={<BillUpload />} />
             <Route path="/chat" element={<AIChat />} />
             <Route path="/multi-agent" element={<MultiAgent />} />
             {/* <Route path="/budgets" element={<Budgets />} /> */}

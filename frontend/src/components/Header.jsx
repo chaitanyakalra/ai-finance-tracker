@@ -49,6 +49,7 @@ function Header({ setShowGroupModal }) {
     switch (location.pathname) {
       case '/dashboard': return 'Dashboard';
       case '/add-expense': return 'Expenses';
+      case '/bill-upload': return 'Bill Upload';
       case '/chat': return 'AI Assistant';
       // case '/budgets': return 'Budgets';
       case '/settings': return 'Settings';
