@@ -12,6 +12,7 @@ export default function FacultyDashboard() {
     const [showGrantModal, setShowGrantModal] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
     const [rejectingBillId, setRejectingBillId] = useState(null);
+    const [viewingBill, setViewingBill] = useState(null);
 
     useEffect(() => {
         loadGrants();
@@ -113,6 +114,135 @@ export default function FacultyDashboard() {
         );
     }
 
+
+
+    const BillDetailsModal = ({ bill, onClose }) => {
+        if (!bill) return null;
+
+        const analysis = bill.fraudAnalysis || {};
+        const aiData = analysis.aiAnalysis || {};
+        // Handle legacy string format if necessary
+        const aiAssessment = typeof aiData === 'string' ? aiData : aiData.overallAssessment;
+
+        return (
+            <div className="modal-overlay" onClick={onClose}>
+                <div className="modal-content bill-details-modal" onClick={e => e.stopPropagation()}>
+                    <button className="close-btn" onClick={onClose}><XCircle size={24} /></button>
+                    
+                    <div className="modal-header">
+                        <h2>Bill Analysis Details</h2>
+                        <div className={`status-badge ${bill.approvalStatus}`}>
+                            {bill.approvalStatus.toUpperCase()}
+                        </div>
+                    </div>
+
+                    <div className="modal-body">
+                        <div className="bill-image-section">
+                            <img src={bill.imageUrl} alt="Bill" />
+                        </div>
+
+                        <div className="analysis-section">
+                            {/* Fraud Score Header */}
+                            <div className="score-card" style={{ 
+                                borderColor: getFraudScoreColor(analysis.score),
+                                backgroundColor: `${getFraudScoreColor(analysis.score)}10`
+                            }}>
+                                <div className="score-value" style={{ color: getFraudScoreColor(analysis.score) }}>
+                                    {analysis.score}
+                                </div>
+                                <div className="score-label">
+                                    <span>Fraud Risk Score</span>
+                                    <small>{analysis.score < 30 ? 'Low Risk' : analysis.score < 60 ? 'Medium Risk' : 'High Risk'}</small>
+                                </div>
+                            </div>
+
+                            {/* AI Assessment */}
+                            <div className="detail-group">
+                                <h3>🤖 AI Assessment</h3>
+                                <p className="ai-text">{aiAssessment || 'No detailed assessment available.'}</p>
+                            </div>
+
+                            {/* Flags */}
+                            {analysis.flags?.length > 0 && (
+                                <div className="detail-group">
+                                    <h3>⚠️ Risk Flags</h3>
+                                    <div className="tags">
+                                        {analysis.flags.map((flag, i) => (
+                                            <span key={i} className="tag flag">{flag.replace(/_/g, ' ')}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Detailed Findings */}
+                            {typeof aiData === 'object' && (
+                                <>
+                                    {aiData.visualTampering?.detected && (
+                                        <div className="detail-group warning">
+                                            <h3>👁️ Visual Tampering</h3>
+                                            <p>{aiData.visualTampering.details}</p>
+                                        </div>
+                                    )}
+
+                                    {aiData.logicalIssues?.length > 0 && (
+                                        <div className="detail-group">
+                                            <h3>🧠 Logical Inconsistencies</h3>
+                                            <ul>
+                                                {aiData.logicalIssues.map((issue, i) => <li key={i}>{issue}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {aiData.formatIssues?.length > 0 && (
+                                        <div className="detail-group">
+                                            <h3>bad_format Format Issues</h3>
+                                            <ul>
+                                                {aiData.formatIssues.map((issue, i) => <li key={i}>{issue}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Extracted Data Summary */}
+                            <div className="detail-group">
+                                <h3>📝 Extracted Data</h3>
+                                <div className="data-grid">
+                                    <div className="data-item">
+                                        <label>Merchant</label>
+                                        <span>{bill.extractedData?.merchantName || 'N/A'}</span>
+                                    </div>
+                                    <div className="data-item">
+                                        <label>Date</label>
+                                        <span>{bill.extractedData?.billDate ? new Date(bill.extractedData.billDate).toLocaleDateString() : 'N/A'}</span>
+                                    </div>
+                                    <div className="data-item">
+                                        <label>Total</label>
+                                        <span>₹{bill.extractedData?.total?.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="modal-actions">
+                                {bill.approvalStatus === 'pending' && (
+                                    <>
+                                        <button className="approve-btn" onClick={() => { handleApproveBill(bill.billId); onClose(); }}>
+                                            <CheckCircle size={18} /> Approve
+                                        </button>
+                                        <button className="reject-btn" onClick={() => { handleRejectBill(bill.billId); onClose(); }}>
+                                            <XCircle size={18} /> Reject
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="faculty-dashboard">
             <div className="dashboard-header">
@@ -185,7 +315,7 @@ export default function FacultyDashboard() {
                             <div className="bills-list">
                                 {studentBills.map(bill => (
                                     <div key={bill.billId} className="bill-approval-card">
-                                        <img src={bill.imageUrl} alt="Bill" className="bill-image" />
+                                        <img src={bill.imageUrl} alt="Bill" className="bill-image" onClick={() => setViewingBill(bill)} />
                                         
                                         <div className="bill-details">
                                             <div className="bill-info">
@@ -196,91 +326,32 @@ export default function FacultyDashboard() {
                                                         ? new Date(bill.extractedData.billDate).toLocaleDateString()
                                                         : 'No date'}
                                                 </p>
-                                                <p className="bill-status-text">
-                                                    <strong>Processing Status:</strong> {bill.status || 'pending'}
-                                                </p>
                                             </div>
 
-                                            {/* Fraud Analysis */}
-                                            {bill.status === 'completed' && bill.fraudAnalysis ? (
-                                                <div className="fraud-analysis">
-                                                    <h4><AlertTriangle size={18} /> Fraud Analysis</h4>
-                                                    <div className="fraud-score">
-                                                        <span>Risk Score:</span>
-                                                        <div className="score-badge" style={{ 
-                                                            backgroundColor: getFraudScoreColor(bill.fraudAnalysis.score) 
-                                                        }}>
-                                                            {bill.fraudAnalysis.score}/100
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    {bill.fraudAnalysis.flags?.length > 0 && (
-                                                        <div className="flags">
-                                                            <strong>⚠️ Flags:</strong>
-                                                            {bill.fraudAnalysis.flags.map((flag, idx) => (
-                                                                <span key={idx} className="flag">{flag}</span>
-                                                            ))}
-                                                        </div>
-                                                    )}
-
-                                                    <div className="validations">
-                                                        <span className={bill.fraudAnalysis.validations?.gstValid ? 'valid' : 'invalid'}>
-                                                            GST: {bill.fraudAnalysis.validations?.gstValid ? '✓' : '✗'}
-                                                        </span>
-                                                        <span className={bill.fraudAnalysis.validations?.mathValid ? 'valid' : 'invalid'}>
-                                                            Math: {bill.fraudAnalysis.validations?.mathValid ? '✓' : '✗'}
-                                                        </span>
-                                                        <span className={bill.fraudAnalysis.validations?.dateValid ? 'valid' : 'invalid'}>
-                                                            Date: {bill.fraudAnalysis.validations?.dateValid ? '✓' : '✗'}
-                                                        </span>
-                                                    </div>
+                                            <div className="bill-status-row">
+                                                <div className={`status-badge ${bill.approvalStatus}`}>
+                                                    {bill.approvalStatus}
                                                 </div>
-                                            ) : (
-                                                <div className="fraud-analysis processing">
-                                                    <Loader className="spinner" size={20} />
-                                                    <p>Analyzing bill for fraud detection...</p>
-                                                    <small>This usually takes 10-30 seconds</small>
-                                                </div>
-                                            )}
-
-                                            {/* Approval Actions */}
-                                            <div className="approval-actions">
-                                                {bill.approvalStatus === 'pending' ? (
-                                                    <>
-                                                        <button 
-                                                            className="approve-btn"
-                                                            onClick={() => handleApproveBill(bill.billId)}
-                                                        >
-                                                            <CheckCircle size={18} />
-                                                            Approve
-                                                        </button>
-                                                        <button 
-                                                            className="reject-btn"
-                                                            onClick={() => handleRejectBill(bill.billId)}
-                                                        >
-                                                            <XCircle size={18} />
-                                                            Reject
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <div className={`status-badge ${bill.approvalStatus}`}>
-                                                        {bill.approvalStatus === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                                                {bill.fraudAnalysis && (
+                                                    <div className="risk-badge" style={{ color: getFraudScoreColor(bill.fraudAnalysis.score) }}>
+                                                        Risk: {bill.fraudAnalysis.score}/100
                                                     </div>
                                                 )}
                                             </div>
 
-                                            {/* Rejection Reason Input */}
-                                            {rejectingBillId === bill.billId && (
-                                                <div className="rejection-form">
-                                                    <textarea
-                                                        placeholder="Enter rejection reason..."
-                                                        value={rejectionReason}
-                                                        onChange={(e) => setRejectionReason(e.target.value)}
-                                                    />
-                                                    <div className="rejection-actions">
-                                                        <button onClick={() => setRejectingBillId(null)}>Cancel</button>
-                                                        <button onClick={submitRejection}>Submit Rejection</button>
-                                                    </div>
+                                            <button className="view-analysis-btn" onClick={() => setViewingBill(bill)}>
+                                                <FileText size={16} /> View Full Analysis
+                                            </button>
+
+                                            {/* Quick Actions */}
+                                            {bill.approvalStatus === 'pending' && (
+                                                <div className="approval-actions">
+                                                    <button className="approve-btn icon-only" onClick={() => handleApproveBill(bill.billId)} title="Approve">
+                                                        <CheckCircle size={20} />
+                                                    </button>
+                                                    <button className="reject-btn icon-only" onClick={() => handleRejectBill(bill.billId)} title="Reject">
+                                                        <XCircle size={20} />
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -300,6 +371,31 @@ export default function FacultyDashboard() {
                         setShowGrantModal(false);
                     }}
                 />
+            )}
+
+            {viewingBill && (
+                <BillDetailsModal 
+                    bill={viewingBill} 
+                    onClose={() => setViewingBill(null)} 
+                />
+            )}
+
+            {/* Rejection Modal (keep existing logic but maybe style it better) */}
+            {rejectingBillId && (
+                <div className="modal-overlay">
+                    <div className="modal-content rejection-modal">
+                        <h3>Reject Bill</h3>
+                        <textarea
+                            placeholder="Enter reason for rejection..."
+                            value={rejectionReason}
+                            onChange={(e) => setRejectionReason(e.target.value)}
+                        />
+                        <div className="modal-actions">
+                            <button onClick={() => setRejectingBillId(null)}>Cancel</button>
+                            <button className="reject-confirm-btn" onClick={submitRejection}>Confirm Rejection</button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

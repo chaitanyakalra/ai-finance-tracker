@@ -260,6 +260,8 @@
 }
 
 .student-bill-card {
+    background: white;
+    color: #333;
     border: 2px solid #e0e0e0;
     border-radius: 15px;
     overflow: hidden;
@@ -284,6 +286,7 @@
 .student-bill-card h3 {
     margin: 0 0 10px 0;
     font-size: 16px;
+    color: #333;
 }
 
 .bill-amount {

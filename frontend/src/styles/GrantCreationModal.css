@@ -1,5 +1,6 @@
 .grant-creation-modal {
     max-width: 500px;
+    color: #333;
 }
 
 .grant-creation-modal h2 {
@@ -31,6 +32,8 @@
     border-radius: 10px;
     font-size: 16px;
     transition: all 0.3s ease;
+    color: #333;
+    background: white;
 }
 
 .form-group input:focus {

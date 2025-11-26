@@ -11,7 +11,7 @@ const fraudAnalysisSchema = new mongoose.Schema({
     score: { type: Number, required: true, min: 0, max: 100 }, // 0 = safe, 100 = highly suspicious
     flags: [{ type: String }], // Array of fraud flags (e.g., "MATH_MISMATCH", "INVALID_GST")
     warnings: [{ type: String }], // Array of warning messages
-    aiAnalysis: { type: String }, // Gemini AI's fraud analysis
+    aiAnalysis: { type: mongoose.Schema.Types.Mixed }, // Full Gemini AI analysis object
     validations: {
         gstValid: { type: Boolean },
         mathValid: { type: Boolean },

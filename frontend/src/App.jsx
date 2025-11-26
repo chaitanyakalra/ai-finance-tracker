@@ -31,6 +31,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         {/* <Route path="/login" element={<Login />} /> */}
         <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/accept-grant" element={<AcceptGrant />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
