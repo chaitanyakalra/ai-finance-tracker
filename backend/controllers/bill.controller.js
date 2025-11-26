@@ -315,7 +315,9 @@ export async function getUserBills(req, res) {
                 extractedData: b.extractedData,
                 fraudAnalysis: b.fraudAnalysis,
                 uploadedAt: b.uploadedAt,
-                errorMessage: b.errorMessage
+                errorMessage: b.errorMessage,
+                approvalStatus: b.approvalStatus || 'pending',
+                rejectionReason: b.rejectionReason
             })),
             total,
             limit: parseInt(limit),

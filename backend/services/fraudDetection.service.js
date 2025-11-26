@@ -128,7 +128,7 @@ export async function detectFraud(imageBuffer, extractedData, billHash, userId, 
                 score: fraudScore,
                 flags: [...new Set(flags)], // Remove duplicates
                 warnings,
-                aiAnalysis: aiAnalysis?.overallAssessment || null,
+                aiAnalysis: aiAnalysis || null,
                 validations: {
                     gstValid,
                     mathValid,

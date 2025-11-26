@@ -20,6 +20,20 @@ export async function createGrant(facultyId, studentEmail, totalAmount) {
         // Check if student already exists
         let student = await User.findOne({ email: studentEmail });
 
+        // Cancel any existing pending grants for this email
+        await Grant.updateMany(
+            { studentEmail: studentEmail.toLowerCase().trim(), status: 'pending' },
+            { status: 'cancelled' }
+        );
+
+        // Mark any existing active grants as completed (superseded)
+        if (student) {
+            await Grant.updateMany(
+                { studentId: student._id, status: 'active' },
+                { status: 'completed' }
+            );
+        }
+
         // Create grant
         const grant = new Grant({
             facultyId,

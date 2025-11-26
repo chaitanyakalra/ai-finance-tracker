@@ -17,12 +17,30 @@ export default function StudentDashboard() {
 
     const loadGrantAndBills = async () => {
         try {
+            // Check for pending grant token from magic link
+            const pendingToken = localStorage.getItem('pendingGrantToken');
+            if (pendingToken) {
+                console.log('Found pending grant token, attempting to accept...');
+                try {
+                    await apiService.acceptInvitation(pendingToken);
+                    localStorage.removeItem('pendingGrantToken');
+                    console.log('Pending grant accepted successfully');
+                    // Show success message or notification here if needed
+                } catch (err) {
+                    console.error('Failed to accept pending grant:', err);
+                    // Keep token if it's a temporary error, or remove if invalid?
+                    // For now, remove to prevent infinite loops if broken
+                    localStorage.removeItem('pendingGrantToken');
+                }
+            }
+
             // Load active grant
             const grantResponse = await apiService.getActiveGrant();
             setGrant(grantResponse.data.grant);
 
             // Load bills
             const billsResponse = await apiService.getUserBills({ limit: 50 });
+            console.log(billsResponse);
             setUploadedBills(billsResponse.data.bills || []);
         } catch (error) {
             console.error('Load grant and bills error:', error);
@@ -291,9 +309,9 @@ export default function StudentDashboard() {
                                     <h3>{bill.extractedData?.merchantName || 'Unknown Merchant'}</h3>
                                     <p className="bill-amount">₹{bill.extractedData?.total?.toFixed(2) || '0.00'}</p>
                                     <p className="bill-date">
-                                        {bill.extractedData?.billDate
-                                            ? new Date(bill.extractedData.billDate).toLocaleDateString()
-                                            : 'No date'}
+                                        {bill?.uploadedAt
+                                            ? new Date(bill.uploadedAt).toLocaleDateString()
+                                            : 'Date not detected'}
                                     </p>
                                     <div className="bill-status">
                                         {getStatusIcon(bill.approvalStatus)}

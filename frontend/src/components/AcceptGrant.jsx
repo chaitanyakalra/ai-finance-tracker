@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader } from 'lucide-react';
 import axios from 'axios';
@@ -11,13 +11,18 @@ const API_BASE_URL = `${BACKEND_URL}/api`;
 export default function AcceptGrant() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const [status, setStatus] = useState('loading'); // 'loading', 'success', 'error', 'requiresSignup'
+    const [status, setStatus] = useState('loading');
     const [grant, setGrant] = useState(null);
     const [error, setError] = useState('');
     const [studentEmail, setStudentEmail] = useState('');
+    const processedRef = useRef(false);
 
     useEffect(() => {
+        if (processedRef.current) return;
+        processedRef.current = true;
         acceptInvitation();
+        
+        return () => clearTimeout(window.redirectTimeout);
     }, []);
 
     const acceptInvitation = async () => {
@@ -49,6 +54,9 @@ export default function AcceptGrant() {
             
             // Check if user needs to sign up first
             if (err.response?.data?.requiresSignup) {
+                // Store token to retry after login
+                localStorage.setItem('pendingGrantToken', token);
+                
                 setStatus('requiresSignup');
                 setStudentEmail(err.response.data.studentEmail);
                 setError(err.response.data.error);
@@ -58,6 +66,8 @@ export default function AcceptGrant() {
             }
         }
     };
+
+    console.log('AcceptGrant Render - Status:', status, 'Grant:', grant, 'Error:', error);
 
     return (
         <div className="accept-grant-page">
@@ -111,6 +121,13 @@ export default function AcceptGrant() {
                         <button onClick={() => navigate('/')} className="home-btn">
                             Go to Home
                         </button>
+                    </div>
+                )}
+
+                {/* Fallback for unhandled status */}
+                {!['loading', 'success', 'requiresSignup', 'error'].includes(status) && (
+                    <div className="status-content error">
+                        <p>Unknown Status: {status}</p>
                     </div>
                 )}
             </div>

@@ -84,6 +84,7 @@
 
 .grant-card {
     background: white;
+    color: #333;
     border: 2px solid #e0e0e0;
     border-radius: 15px;
     padding: 20px;
@@ -201,6 +202,7 @@
 
 .bill-approval-card {
     background: white;
+    color: #333;
     border: 2px solid #e0e0e0;
     border-radius: 15px;
     padding: 20px;
@@ -214,6 +216,12 @@
     height: 250px;
     object-fit: cover;
     border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.bill-image:hover {
+    transform: scale(1.02);
 }
 
 .bill-details {
@@ -388,6 +396,263 @@
     }
 
     .bill-approval-card {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    color: #333;
+    border-radius: 20px;
+    padding: 30px;
+    width: 90%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.close-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.modal-body {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+}
+
+.bill-image-section img {
+    width: 100%;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Score Card */
+.score-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border: 2px solid;
+    border-radius: 15px;
+}
+
+.score-value {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.score-label {
+    display: flex;
+    flex-direction: column;
+}
+
+.score-label span {
+    font-weight: 700;
+    font-size: 18px;
+    color: #333;
+}
+
+.score-label small {
+    color: #666;
+}
+
+/* Detail Groups */
+.detail-group h3 {
+    font-size: 16px;
+    color: #666;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-group.warning {
+    background: #fff5f5;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #ef4444;
+}
+
+.detail-group ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #444;
+}
+
+.detail-group li {
+    margin-bottom: 5px;
+}
+
+.ai-text {
+    line-height: 1.6;
+    color: #333;
+    font-size: 15px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tag.flag {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Data Grid */
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.data-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.data-item label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+}
+
+.data-item span {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+/* New Bill List Styles */
+.bill-status-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.risk-badge {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.view-analysis-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: #666;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: fit-content;
+}
+
+.view-analysis-btn:hover {
+    border-color: #667eea;
+    color: #667eea;
+    background: #f8f9fa;
+}
+
+.icon-only {
+    padding: 10px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .modal-body {
+        grid-template-columns: 1fr;
+    }
+
+    .data-grid {
         grid-template-columns: 1fr;
     }
 }
