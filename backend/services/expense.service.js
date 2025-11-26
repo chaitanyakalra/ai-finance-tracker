@@ -23,7 +23,6 @@ export async function createExpense({ userId, date, amount, category, descriptio
   const expense = await Expense.create(expenseData);
 
   // Return plain object without mongoose internals if needed, or just the document
-  // Previous implementation returned the plain object inserted.
   return expense.toObject ? expense.toObject() : expense;
 }
 
@@ -41,8 +40,8 @@ export async function getRecentExpenses(userId, limit = 10) {
   // Filter expenses by userId
   const expenses = await Expense.find({ userId })
     .select('-_id -__v')
-    .sort({ date: -1 })
-    .limit(limit)
+    .sort({ date: -1, created_at: -1 }) // Sort by date then created_at
+    .limit(parseInt(limit))
     .lean();
 
   return expenses;

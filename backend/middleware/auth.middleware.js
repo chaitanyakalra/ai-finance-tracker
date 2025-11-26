@@ -10,11 +10,11 @@ export function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'] || req.headers['Authorization'];
     
     // Debug logging
-    console.log('Auth Middleware - Headers:', {
-      authorization: req.headers['authorization'],
-      Authorization: req.headers['Authorization'],
-      allHeaders: Object.keys(req.headers)
-    });
+    // console.log('Auth Middleware - Headers:', {
+    //   authorization: req.headers['authorization'],
+    //   Authorization: req.headers['Authorization'],
+    //   allHeaders: Object.keys(req.headers)
+    // });
     
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 

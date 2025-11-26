@@ -32,7 +32,6 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         apiService.getAmountIOweByPerson()
       ]);
 
-
       setStats(statsRes.data);
       setRecentExpenses(recentRes.data);
       setMonthlyExpenses(monthlyRes.data);
@@ -167,7 +166,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
         borderWidth: 1,
         callbacks: {
           label: function (context) {
-            return `₹${context.parsed.toFixed(2)}`;
+            return `₹${context.raw.toFixed(2)}`;
           }
         }
       }
