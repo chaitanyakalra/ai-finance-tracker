@@ -128,42 +128,6 @@ curl -X POST http://localhost:8000/api/ai/chat \
   -d '{"question":"How much did I spend on food this month?"}'
 ```
 
-## AI / NLP notes
-
-- The project integrates with an LLM (Google Gemini) using environment-configured credentials.
-- The backend code constructs prompts and forwards them to the model — this is prompt-engineering + LLM inference rather than a classic NLP training pipeline.
-- The frontend contains `AIChat.jsx` and `MultiAgent.jsx` components that provide conversational and multi-agent interfaces.
-
-If you plan to use this for an NLP course, see [Extending for an NLP course project](#extending-for-an-nlp-course-project).
-
-## Making this repo public — security checklist
-
-If you already made the repo public, immediately verify the following and act if anything is exposed.
-
-1. Check the current tree for secret files: `.env`, `*.pem`, `*.key`, `credentials.json`, etc.
-2. Run a secret-history scan (gitleaks / trufflehog) to detect keys that were committed and later removed.
-3. If any secret is found in the repository or history, rotate it immediately (revoke API keys, rotate DB passwords, revoke cloud keys).
-4. Remove secrets from the repository and rewrite history (git-filter-repo or BFG) if needed — note that rewriting history requires force-push and all contributors must re-clone.
-5. Add `.env` to `.gitignore` and create a `backend/.env.example` showing only placeholders.
-6. Remove or anonymize any real user data (PII) from seed files and fixtures. Seed data should be synthetic.
-7. If you used third-party analytics in `frontend/index.html`, ensure the snippet does not include a real token. If it does, rotate/regenerate.
-
-See the `SECURITY.md` or the project documentation for more detailed steps.
-
-## Extending for an NLP course project
-
-This repository is a strong base for applied NLP/LLM coursework. Possible project ideas:
-
-- Compare prompt templates and evaluate LLM response quality on finance questions (prompt engineering experiment).
-- Implement an information-extraction microservice (NER) with spaCy or a transformer model to extract merchant, amount, and date from free-text descriptions.
-- Build an intent classification + slot-filling pipeline and compare a local classifier vs. LLM parsing.
-- Evaluate multi-agent setups (different prompts/roles) and measure agreement / diversity of responses.
-
-Files of interest to modify:
-- `backend/services/ai.service.js` — AI prompt handling and model invocation
-- `lambda/aiProcessor/index.js` — multi-agent orchestration logic
-- `frontend/src/components/AIChat.jsx`, `MultiAgent.jsx` — UI components
-
 ## Testing & linting
 
 - Add unit tests for backend services and API routes.
@@ -188,7 +152,3 @@ This project does not include a license by default. Add an open-source license (
 - AI features are designed to be used with Google Gemini (or any configured LLM provider)
 
 ---
-
-If you want, I can also:
-- Add a `backend/.env.example` file and a `.gitignore` diff and commit them for you.
-- Run a sanity scan (gitleaks) on the repo and report findings.
