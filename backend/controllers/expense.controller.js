@@ -37,7 +37,7 @@ export async function getAllExpenses(req, res, next) {
     try {
         if (!checkDB(res)) return;
         const { startDate, endDate, category, type, minAmount, maxAmount, tags,
-                sortBy = 'date', sortOrder = 'desc', page = 1, limit = 20 } = req.query;
+            sortBy = 'date', sortOrder = 'desc', page = 1, limit = 20 } = req.query;
 
         const filter = { userId: req.userId };
         if (startDate || endDate) {
@@ -76,7 +76,7 @@ export async function getRecentExpenses(req, res, next) {
     try {
         if (!checkDB(res)) return;
         const limit = parseInt(req.query.limit) || 10;
-        
+
         // Parallel queries
         const [expenses, shared] = await Promise.all([
             Expense.find({ userId: req.userId })
@@ -110,7 +110,6 @@ export async function getExpenseStats(req, res, next) {
 
         // Filter: match regular expenses that are not 'income' (to catch legacy records without a type)
         // AND match shared expenses created by this user
-        const personalFilter = { userId: req.userId, type: { $ne: 'income' } };
         const personalFilter = { userId: String(req.userId), type: { $ne: 'income' } };
         const incomeFilter = { userId: String(req.userId), type: 'income' };
         const sharedFilter = { createdBy: String(req.userId) };
@@ -241,9 +240,9 @@ export async function getMonthlyExpense(req, res, next) {
                 { $match: { createdBy: req.userId, date: { $gte: sinceStr } } },
                 {
                     $group: {
-                        _id: { 
-                            year: { $year: { $dateFromString: { dateString: '$date' } } }, 
-                            month: { $month: { $dateFromString: { dateString: '$date' } } } 
+                        _id: {
+                            year: { $year: { $dateFromString: { dateString: '$date' } } },
+                            month: { $month: { $dateFromString: { dateString: '$date' } } }
                         },
                         total: { $sum: '$amount' }, count: { $sum: 1 },
                     },
@@ -298,7 +297,7 @@ export async function updateExpense(req, res, next) {
 
         const { id } = req.params;
         const ALLOWED = ['type', 'category', 'amount', 'date', 'description', 'tags', 'isRecurring',
-                         'recurringFrequency', 'recurringEndDate', 'notes'];
+            'recurringFrequency', 'recurringEndDate', 'notes'];
 
         const filterQuery = req.user.role === 'admin'
             ? { id }
