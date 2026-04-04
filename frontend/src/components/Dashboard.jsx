@@ -679,6 +679,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                   <CardContent className="flex-1 overflow-hidden">
                     <div className="space-y-4 h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                       {recentExpenses.length > 0 ? (
+                        recentExpenses.map((exp, idx) => (
                           <motion.div 
                             key={exp.id || idx}
                             initial={{ opacity: 0, x: -20 }}
