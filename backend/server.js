@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import rateLimit from 'express-rate-limit';
 import corsConfig from './config/cors.js';
 import { connectDB, closeDB } from './config/database.js';
 import routes from './routes/index.js';
@@ -19,9 +20,39 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// General API rate limiter — 200 requests per minute per IP
+const apiLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: 'Too Many Requests',
+        message: 'Too many requests from this IP. Please try again later.',
+        statusCode: 429,
+    },
+});
+
+// Stricter limiter for auth endpoints — 20 requests per 15 minutes per IP
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        error: 'Too Many Requests',
+        message: 'Too many authentication attempts. Please try again later.',
+        statusCode: 429,
+    },
+});
+
 // Middleware
 app.use(corsConfig);
 app.use(express.json());
+
+// Apply rate limiting — general limiter first, then stricter auth limiter on top
+app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
 
 // Routes
 app.use('/api', routes);
