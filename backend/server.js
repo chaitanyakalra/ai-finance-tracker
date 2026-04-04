@@ -50,9 +50,9 @@ const authLimiter = rateLimit({
 app.use(corsConfig);
 app.use(express.json());
 
-// Apply rate limiting
-app.use('/api/auth', authLimiter);
+// Apply rate limiting — general limiter first, then stricter auth limiter on top
 app.use('/api', apiLimiter);
+app.use('/api/auth', authLimiter);
 
 // Routes
 app.use('/api', routes);

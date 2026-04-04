@@ -54,7 +54,11 @@ router.get('/insights', getSpendingInsights);
 /**
  * GET /api/dashboard/budget-vs-actual
  * Compare actual spending vs. provided budget per category.
- * Query: year, month, budget_<Category>=<amount> (e.g. budget_Food=500)
+ * Query: year, month, budget_<Category>=<amount>
+ *   Category names are case-sensitive and must match the allowed values:
+ *   Food, Transport, Shopping, Bills, Entertainment, Salary, Bonus,
+ *   Investment, Healthcare, Education, Others
+ *   Example: ?year=2025&month=3&budget_Food=500&budget_Transport=200
  */
 router.get('/budget-vs-actual', getBudgetComparison);
 
