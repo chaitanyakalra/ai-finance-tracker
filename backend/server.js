@@ -20,6 +20,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Trust the primary proxy (Render)
+app.set('trust proxy', 1);
+
 // General API rate limiter — 200 requests per minute per IP
 const apiLimiter = rateLimit({
     windowMs: 60 * 1000,
