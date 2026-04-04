@@ -41,7 +41,7 @@ export async function findOrCreateUser(googleProfile) {
     email,
     name,
     profilePic: picture || null,
-    role: 'user',
+    role: 'viewer',
   });
 
   return newUser;

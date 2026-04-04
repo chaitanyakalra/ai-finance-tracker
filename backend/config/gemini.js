@@ -10,7 +10,7 @@ if (geminiApiKey) {
   console.warn('⚠️  Gemini API key not configured');
 }
 
-export function getGeminiModel(modelName = 'gemini-2.0-flash-exp') {
+export function getGeminiModel(modelName = 'gemini-2.5-flash') {
   if (!genAI) {
     throw new Error('Gemini API key not configured');
   }
