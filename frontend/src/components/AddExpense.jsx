@@ -20,7 +20,8 @@ function AddExpense() {
     date: new Date().toISOString().split('T')[0],
     amount: "",
     category: "Food",
-    description: ""
+    description: "",
+    type: "expense"
   });
 
   const [splitExpense, setSplitExpense] = useState(false);
@@ -170,7 +171,8 @@ function AddExpense() {
         date: new Date().toISOString().split('T')[0],
         amount: "",
         category: "Food",
-        description: ""
+        description: "",
+        type: "expense"
       });
       setSplitExpense(false);
       setSelectedGroup("");

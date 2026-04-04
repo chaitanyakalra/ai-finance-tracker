@@ -128,8 +128,8 @@ export default class AnalyticsService {
         return breakdown.map(cat => ({
             category: cat.category,
             actual: cat.total,
-            budget: budgetData[cat.category] ?? null,
-            variance: budgetData[cat.category] != null ? cat.total - budgetData[cat.category] : null,
+            budget: budgetData[cat.category] != null ? Math.round(budgetData[cat.category] * 100) / 100 : null,
+            variance: budgetData[cat.category] != null ? Math.round((cat.total - budgetData[cat.category]) * 100) / 100 : null,
         }));
     }
 }

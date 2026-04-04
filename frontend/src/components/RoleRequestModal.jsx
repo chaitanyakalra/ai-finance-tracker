@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,18 @@ import { apiService } from "../utils/api";
 
 const MIN_REASON_LENGTH = 20;
 
-function RoleRequestModal({ open, onOpenChange, onSuccess }) {
+function RoleRequestModal({ open, onOpenChange, onSuccess, initialRole = "" }) {
   const { user } = useAuth();
-  const [requestedRole, setRequestedRole] = useState("");
+  const [requestedRole, setRequestedRole] = useState(initialRole);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Sync requestedRole if initialRole changes when modal opens
+  useEffect(() => {
+    if (open) {
+      setRequestedRole(initialRole);
+    }
+  }, [open, initialRole]);
 
   const isValid = requestedRole && reason.trim().length >= MIN_REASON_LENGTH;
 

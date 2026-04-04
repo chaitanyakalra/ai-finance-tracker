@@ -52,15 +52,14 @@ expenseSchema.index({ userId: 1, category: 1 });
 expenseSchema.index({ userId: 1, type: 1 });
 
 // Pre-save: enforce recurringFrequency when isRecurring is true
-expenseSchema.pre('save', function (next) {
+expenseSchema.pre('save', function () {
     if (this.isRecurring && !this.recurringFrequency) {
-        return next(new Error('recurringFrequency is required when isRecurring is true'));
+        throw new Error('recurringFrequency is required when isRecurring is true');
     }
     if (!this.isRecurring) {
         this.recurringFrequency = null;
         this.recurringEndDate = null;
     }
-    next();
 });
 
 export default mongoose.model('Expense', expenseSchema);

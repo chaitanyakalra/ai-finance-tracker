@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, Search, User, LogOut, Users, ChevronDown, X, ArrowLeft, Mail, Crown, Trash2, Plus } from "lucide-react";
+import { Bell, Search, User, LogOut, Users, ChevronDown, X, ArrowLeft, Mail, Crown, Trash2, Plus, ShieldCheck, UserCheck, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "../context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +19,7 @@ import SearchModal from "./SearchModal";
 function Header({ setShowGroupModal }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, isAdmin, isAnalyst, isViewer } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showGroupsDropdown, setShowGroupsDropdown] = useState(false);
   const [groups, setGroups] = useState([]);
@@ -167,7 +170,30 @@ function Header({ setShowGroupModal }) {
               />
             </div>
             {isAuthenticated && (
-              <div className="header-actions">
+              <div className="flex items-center gap-x-4 lg:gap-x-6">
+                {/* Role Badge */}
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50">
+                   {isAdmin && (
+                     <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20 gap-1 px-2">
+                       <Crown size={12} /> Admin
+                     </Badge>
+                   )}
+                   {isAnalyst && (
+                     <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 hover:bg-indigo-500/20 gap-1 px-2">
+                       <ShieldCheck size={12} /> Analyst
+                     </Badge>
+                   )}
+                   {isViewer && (
+                     <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20 hover:bg-slate-500/20 gap-1 px-2">
+                       <Eye size={12} /> Viewer
+                     </Badge>
+                   )}
+                   <span className="text-sm font-medium text-foreground hidden sm:inline-block">
+                     {user?.name || user?.email?.split('@')?.[0] || 'User'}
+                   </span>
+                </div>
+
+                <div className="flex items-center gap-2">
                 <button
                   className="my-groups-button"
                   onClick={toggleGroupsDropdown}
@@ -184,14 +210,15 @@ function Header({ setShowGroupModal }) {
                   <Users size={18} />
                   <span>Create Group</span>
                 </button>
-                <button
-                  className="logout-button"
-                  onClick={handleLogout}
-                  title="Logout"
-                >
-                  <LogOut size={18} />
-                  <span>Logout</span>
-                </button>
+                  <button
+                    className="logout-button"
+                    onClick={handleLogout}
+                    title="Logout"
+                  >
+                    <LogOut size={18} />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

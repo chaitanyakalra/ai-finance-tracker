@@ -82,8 +82,19 @@ export async function sendGrantInvitation({ studentEmail, facultyName, grantAmou
             `
         };
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, error: null };
+        // If transporter.verify failed but we attempt sendMail anyway:
+        try {
+            await transporter.sendMail(mailOptions);
+            return { success: true, error: null };
+        } catch (sendError) {
+            console.warn('⚠️ SMTP send error, falling back to console log:');
+            console.log('--- FALLBACK EMAIL ---');
+            console.log(`To: ${mailOptions.to}`);
+            console.log(`Subject: ${mailOptions.subject}`);
+            console.log(`Body excerpt: ${mailOptions.html.substring(0, 500).replace(/<[^>]*>/g, '')}...`);
+            console.log('--- END FALLBACK ---');
+            return { success: true, error: null, fallback: true };
+        }
     } catch (error) {
         console.error('Send invitation email error:', error);
         return { success: false, error: error.message };
@@ -209,8 +220,52 @@ export async function sendBillRejectionEmail({ studentEmail, billAmount, rejecti
     }
 }
 
+/**
+ * Send role request status update to user
+ * @param {Object} params - Email parameters
+ * @param {string} params.userEmail - User's email
+ * @param {string} params.status - NEW status (APPROVED/REJECTED)
+ * @param {string} params.role - The role requested
+ * @param {string} params.notes - Admin notes or rejection reason
+ * @returns {Promise<Object>} - { success: boolean, error: string }
+ */
+export async function sendRoleRequestStatusEmail({ userEmail, status, role, notes }) {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+            to: userEmail,
+            subject: `📋 Role Request ${status}: ${role}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2>Role Request ${status}</h2>
+                    <p>Your request for the <strong>${role}</strong> role has been <strong>${status.toLowerCase()}</strong>.</p>
+                    ${notes ? `<p><strong>Note:</strong> ${notes}</p>` : ''}
+                    <p>Log in to see your updated permissions.</p>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            return { success: true, error: null };
+        } catch (sendError) {
+            console.warn('⚠️ SMTP send error, falling back to console log:');
+            console.log('--- FALLBACK EMAIL ---');
+            console.log(`To: ${mailOptions.to}`);
+            console.log(`Subject: ${mailOptions.subject}`);
+            console.log(`Body excerpt: ${mailOptions.html.substring(0, 500).replace(/<[^>]*>/g, '')}...`);
+            console.log('--- END FALLBACK ---');
+            return { success: true, error: null, fallback: true };
+        }
+    } catch (error) {
+        console.error('Send role status email error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export default {
     sendGrantInvitation,
     sendBillApprovalEmail,
-    sendBillRejectionEmail
+    sendBillRejectionEmail,
+    sendRoleRequestStatusEmail
 };

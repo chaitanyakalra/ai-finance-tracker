@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import RoleRequest from '../models/RoleRequest.js';
 import User from '../models/User.js';
+import EmailService from '../services/email.service.js';
 
 const REQUESTABLE_ROLES = ['analyst', 'admin'];
 const VALID_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'];
@@ -18,6 +19,17 @@ export async function requestRoleUpgrade(req, res, next) {
         }
         if (!reason || reason.trim().length < 20) {
             return res.status(400).json({ error: 'reason must be at least 20 characters.' });
+        }
+
+        // Get user's current role to compare
+        const user = await User.findOne({ id: userId }).lean();
+        if (!user) return res.status(404).json({ error: 'User not found.' });
+
+        const rolePriority = { 'viewer': 1, 'analyst': 2, 'admin': 3 };
+        if (rolePriority[requestedRole] <= rolePriority[user.role]) {
+            return res.status(400).json({
+                error: `You cannot request the '${requestedRole}' role as it is not an upgrade from your current '${user.role}' role.`,
+            });
         }
 
         // Check for existing PENDING request
@@ -139,11 +151,19 @@ export async function approveRoleRequest(req, res, next) {
         await roleRequest.save();
 
         // Update user role
-        await User.findOneAndUpdate(
+        const user = await User.findOneAndUpdate(
             { id: roleRequest.userId },
             { role: roleRequest.requestedRole },
-            { runValidators: true }
+            { runValidators: true, new: true }
         );
+
+        // Notify user (background)
+        EmailService.sendRoleRequestStatusEmail({
+            userEmail: user.email,
+            status: 'APPROVED',
+            role: roleRequest.requestedRole,
+            notes: adminNotes
+        }).catch(err => console.error('Approval notification error:', err));
 
         return res.json({
             message: 'Role request approved and user role updated.',
@@ -180,6 +200,17 @@ export async function rejectRoleRequest(req, res, next) {
         roleRequest.reviewedBy = req.user.id;
         roleRequest.reviewedAt = new Date();
         await roleRequest.save();
+
+        // Notify user (background)
+        const user = await User.findOne({ id: roleRequest.userId }).lean();
+        if (user) {
+            EmailService.sendRoleRequestStatusEmail({
+                userEmail: user.email,
+                status: 'REJECTED',
+                role: roleRequest.requestedRole,
+                notes: reason
+            }).catch(err => console.error('Rejection notification error:', err));
+        }
 
         return res.json({
             message: 'Role request rejected.',

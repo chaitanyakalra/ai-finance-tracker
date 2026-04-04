@@ -11,6 +11,8 @@ export function authorizeRoles(...allowedRoles) {
             return res.status(403).json({
                 error: 'Forbidden',
                 message: `This action requires one of: [${allowedRoles.join(', ')}]. Your role: ${role ?? 'unknown'}`,
+                userRole: role ?? 'unknown',
+                requiredRoles: allowedRoles
             });
         }
         next();
@@ -28,6 +30,8 @@ export function requireMinimumRole(minimumRole) {
             return res.status(403).json({
                 error: 'Forbidden',
                 message: `This action requires at least the '${minimumRole}' role. Your role: ${role ?? 'unknown'}`,
+                userRole: role ?? 'unknown',
+                requiredMinimumRole: minimumRole
             });
         }
         next();

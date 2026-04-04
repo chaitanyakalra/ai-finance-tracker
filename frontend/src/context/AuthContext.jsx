@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
     loading,
     isAdmin: user?.role === 'admin',
     isAnalyst: user?.role === 'analyst',
-    isViewer: user?.role === 'viewer',
+    isViewer: !user?.role || user?.role === 'viewer',
     isAuthenticated: !!user,
     fetchCurrentUser,
     updateUserRole,

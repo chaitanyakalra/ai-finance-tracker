@@ -12,6 +12,14 @@ export async function getCurrentUser(req, res, next) {
             .lean();
         if (!user) return res.status(404).json({ error: 'User not found.' });
 
+        // ⚡ DEBUG: Log the raw role from DB
+        console.log(`🔍 getCurrentUser: ${user.email} | DB role: '${user.role}' (type: ${typeof user.role})`);
+
+        // Normalize role for legacy users who were created before RBAC was added
+        if (!user.role) user.role = 'viewer';
+
+        console.log(`🔍 getCurrentUser: Sending role='${user.role}' to frontend`);
+
         return res.json({ user, permissions: getPermissions(user.role) });
     } catch (err) {
         next(err);
