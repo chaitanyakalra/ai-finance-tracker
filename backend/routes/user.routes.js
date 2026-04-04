@@ -1,6 +1,8 @@
 import express from 'express';
 import { authenticateToken } from '../middleware/auth.middleware.js';
 import { adminOnly } from '../middleware/authorize.middleware.js';
+import { validate } from '../middleware/validate.middleware.js';
+import { updateRoleSchema, updateStatusSchema, updateProfileSchema } from '../validators/user.validator.js';
 import {
     getCurrentUser,
     getAllUsers,
@@ -15,11 +17,11 @@ const router = express.Router();
 // All user routes require authentication
 router.use(authenticateToken);
 
-router.get('/me', getCurrentUser);                         // any authenticated user
-router.get('/', adminOnly, getAllUsers);                    // admin only
-router.get('/:userId', getUserById);                       // admin or self (enforced in controller)
-router.put('/:userId/role', adminOnly, updateUserRole);    // admin only
-router.put('/:userId/status', adminOnly, updateUserStatus);// admin only
-router.put('/:userId/profile', updateUserProfile);         // admin or self (enforced in controller)
+router.get('/me', getCurrentUser);                                                             // any authenticated user
+router.get('/', adminOnly, getAllUsers);                                                        // admin only
+router.get('/:userId', getUserById);                                                           // admin or self (enforced in controller)
+router.put('/:userId/role', adminOnly, validate(updateRoleSchema), updateUserRole);            // admin only
+router.put('/:userId/status', adminOnly, validate(updateStatusSchema), updateUserStatus);      // admin only
+router.put('/:userId/profile', validate(updateProfileSchema), updateUserProfile);              // admin or self (enforced in controller)
 
 export default router;
