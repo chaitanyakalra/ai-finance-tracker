@@ -26,6 +26,8 @@ import { Loader2, CheckCircle, XCircle, Users } from "lucide-react";
 
 const TABS = ["PENDING", "APPROVED", "REJECTED"];
 
+const toTitleCase = (str) => str.charAt(0) + str.slice(1).toLowerCase();
+
 const statusBadge = (status) => {
   switch (status) {
     case "PENDING":
@@ -236,7 +238,7 @@ function AdminRoleRequestsPage() {
         <TabsList>
           {TABS.map((tab) => (
             <TabsTrigger key={tab} value={tab} className="capitalize">
-              {tab.charAt(0) + tab.slice(1).toLowerCase()}
+              {toTitleCase(tab)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -246,7 +248,7 @@ function AdminRoleRequestsPage() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-medium">
-                  {tab.charAt(0) + tab.slice(1).toLowerCase()} Requests
+                  {toTitleCase(tab)} Requests
                   {pagination.total > 0 && (
                     <span className="ml-2 text-muted-foreground font-normal text-sm">
                       ({pagination.total})

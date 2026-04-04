@@ -67,8 +67,10 @@ export async function getAdminRoleRequests(req, res, next) {
         const { status } = req.query;
         const page = Math.max(1, parseInt(req.query.page, 10) || 1);
         const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
-        const filter = {};
-        if (status && VALID_STATUSES.includes(status)) filter.status = status;
+
+        // Build a strictly-validated filter — only allow known enum values
+        const validatedStatus = VALID_STATUSES.find((s) => s === status);
+        const filter = validatedStatus ? { status: validatedStatus } : {};
 
         const skip = (page - 1) * limit;
         const [requests, total] = await Promise.all([
@@ -92,9 +94,9 @@ export async function getAdminRoleRequests(req, res, next) {
             requests: enriched,
             pagination: {
                 total,
-                page: parseInt(page),
-                limit: parseInt(limit),
-                pages: Math.ceil(total / parseInt(limit)),
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
             },
         });
     } catch (err) {

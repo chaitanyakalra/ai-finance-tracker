@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "../context/AuthContext";
 import { apiService } from "../utils/api";
 
+const PENDING_COUNT_POLL_INTERVAL_MS = 60_000;
+
 function Navigation() {
   const { user } = useAuth();
   const [pendingCount, setPendingCount] = useState(0);
@@ -24,7 +26,7 @@ function Navigation() {
     };
 
     fetchPendingCount();
-    const interval = setInterval(fetchPendingCount, 60_000);
+    const interval = setInterval(fetchPendingCount, PENDING_COUNT_POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       clearInterval(interval);
