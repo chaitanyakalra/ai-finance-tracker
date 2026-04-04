@@ -7,8 +7,6 @@ const ProtectedRoute = ({ adminOnly = false }) => {
     const { user, loading, isAuthenticated } = useAuth();
     const toastShownRef = useRef(false);
 
-    const isAuthenticatedFallback = !loading && (isAuthenticated || !!localStorage.getItem("authToken"));
-
     useEffect(() => {
         if (!loading && isAuthenticated && adminOnly && user?.role !== 'admin' && !toastShownRef.current) {
             toastShownRef.current = true;
@@ -16,11 +14,12 @@ const ProtectedRoute = ({ adminOnly = false }) => {
         }
     }, [loading, isAuthenticated, adminOnly, user]);
 
+    // Show nothing while auth state is being determined
     if (loading) {
         return null;
     }
 
-    if (!isAuthenticatedFallback) {
+    if (!isAuthenticated) {
         return <Navigate to="/" replace />;
     }
 

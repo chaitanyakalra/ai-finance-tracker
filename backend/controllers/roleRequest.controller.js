@@ -64,13 +64,15 @@ export async function getMyRequests(req, res, next) {
 /** GET /api/admin/role-requests — admin only; lists requests with optional status filter + pagination */
 export async function getAdminRoleRequests(req, res, next) {
     try {
-        const { status, page = 1, limit = 20 } = req.query;
+        const { status } = req.query;
+        const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
         const filter = {};
         if (status && VALID_STATUSES.includes(status)) filter.status = status;
 
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const skip = (page - 1) * limit;
         const [requests, total] = await Promise.all([
-            RoleRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit)).lean(),
+            RoleRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
             RoleRequest.countDocuments(filter),
         ]);
 
