@@ -120,20 +120,50 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
 
   const categoryIcons = {
     Food: "🍔",
+    Groceries: "🛒",
     Transport: "🚗",
     Shopping: "🛍️",
     Bills: "📄",
     Entertainment: "🎬",
+    Health: "🏥",
+    Education: "🎓",
+    Travel: "✈️",
+    Investment: "📈",
     Others: "📦"
   };
 
   const categoryColors = {
-    Food: "#00E5FF", // Cyan
-    Transport: "#00FF94", // Green
-    Shopping: "#D946EF", // Purple
-    Bills: "#F59E0B", // Yellow
+    Food: "#00E5FF",       // Cyan
+    Groceries: "#10B981",   // Emerald
+    Transport: "#00FF94",   // Green
+    Shopping: "#D946EF",    // Purple
+    Bills: "#F59E0B",       // Yellow
     Entertainment: "#F97316", // Orange
-    Others: "#94A3B8" // Slate
+    Health: "#F43F5E",      // Rose
+    Education: "#8B5CF6",   // Violet
+    Travel: "#3B82F6",      // Blue
+    Investment: "#EC4899",  // Pink
+    Others: "#94A3B8"       // Slate
+  };
+
+  const formatRelativeDate = (dateStr) => {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now - date;
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 0) return "Today";
+      if (diffDays === 1) return "Yesterday";
+      if (diffDays < 7) return `${diffDays} days ago`;
+      
+      return date.toLocaleDateString('en-IN', { 
+        day: 'numeric', 
+        month: 'short' 
+      });
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   // Chart data
@@ -515,10 +545,15 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                         <TrendingUp className="h-4 w-4 text-primary" />
                       </CardHeader>
                       <CardContent>
-                        <div className={`text-2xl font-black ${healthColor}`}>{healthLabel}</div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {healthDesc}
-                        </p>
+                        <motion.div 
+                          animate={{ opacity: [0.8, 1, 0.8] }}
+                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                        >
+                          <div className={`text-2xl font-black ${healthColor}`}>{healthLabel}</div>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {healthDesc}
+                          </p>
+                        </motion.div>
                       </CardContent>
                     </Card>
                   );
@@ -644,8 +679,13 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                   <CardContent className="flex-1 overflow-hidden">
                     <div className="space-y-4 h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                       {recentExpenses.length > 0 ? (
-                        recentExpenses.map((exp, idx) => (
-                          <div key={exp.id || idx} className="flex items-center group p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border transition-all duration-300">
+                          <motion.div 
+                            key={exp.id || idx}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            className="flex items-center group p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border transition-all duration-300"
+                          >
                             <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-muted/30 group-hover:bg-background group-hover:scale-110 shadow-sm transition-all">
                               <span className="text-xl">{categoryIcons[exp.category] || "📦"}</span>
                             </div>
@@ -653,7 +693,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                               <p className="text-sm font-bold leading-tight text-foreground truncate">{exp.description}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-[10px] font-black uppercase tracking-tighter bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{exp.category}</span>
-                                <span className="text-[10px] text-muted-foreground font-medium">{exp.date}</span>
+                                <span className="text-[10px] text-muted-foreground font-medium">{formatRelativeDate(exp.date)}</span>
                               </div>
                             </div>
                             <div className="ml-auto flex flex-col items-end">
@@ -662,7 +702,7 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
                                 <div className="h-full bg-primary" style={{ width: `${Math.min(100, (exp.amount / 5000) * 100)}%` }}></div>
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         ))
                       ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center p-8 opacity-40">
