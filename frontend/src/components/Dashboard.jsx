@@ -8,10 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
+import ViewerBanner from "./ViewerBanner";
+import MyRequestStatus from "./MyRequestStatus";
 
 ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
 function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRecentExpenses, monthlyExpenses, setMonthlyExpenses, insight, setInsight }) {
+  const { user } = useAuth();
+  const isViewer = user?.role === 'viewer';
   const [activeChart, setActiveChart] = useState('doughnut');
   const [insightLoading, setInsightLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
@@ -215,6 +220,10 @@ function Dashboard({ loading, setLoading, stats, setStats, recentExpenses, setRe
 
   return (
     <div className="space-y-8">
+      {/* Role-awareness banners */}
+      <ViewerBanner />
+      <MyRequestStatus />
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h2>
