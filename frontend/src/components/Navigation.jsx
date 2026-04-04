@@ -1,14 +1,41 @@
-import { LayoutDashboard, MessageSquare, PieChart, Settings, LogOut, Wallet, Receipt } from "lucide-react";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, MessageSquare, Settings, Wallet, Receipt, ShieldCheck } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "../context/AuthContext";
+import { apiService } from "../utils/api";
 
 function Navigation() {
+  const { user } = useAuth();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    if (user?.role !== "admin") return;
+    let cancelled = false;
+
+    const fetchPendingCount = () => {
+      apiService
+        .getAdminRequests({ status: "PENDING", limit: 1 })
+        .then((res) => {
+          if (!cancelled) setPendingCount(res.data.pagination?.total || 0);
+        })
+        .catch(() => {});
+    };
+
+    fetchPendingCount();
+    const interval = setInterval(fetchPendingCount, 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [user]);
+
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/add-expense", label: "Expenses", icon: Wallet },
     { path: "/bill-upload", label: "Bill Upload", icon: Receipt },
     { path: "/chat", label: "AI Chat", icon: MessageSquare },
-    // { path: "/budgets", label: "Budgets", icon: PieChart },
     { path: "/settings", label: "Settings", icon: Settings },
   ];
 
@@ -46,18 +73,30 @@ function Navigation() {
               <span>{item.label}</span>
             </NavLink>
           ))}
-        </div>
 
-        {/* User Profile / Bottom Section - Desktop only */}
-        {/* <div className="hidden md:block p-4 mt-auto">
-          <div className="rounded-xl bg-gradient-to-br from-primary/20 to-secondary/20 p-4 border border-white/5">
-            <h4 className="font-semibold text-sm mb-1">Pro Plan</h4>
-            <p className="text-xs text-muted-foreground mb-3">Get advanced AI insights</p>
-            <button className="w-full rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:opacity-90 transition-opacity">
-              Upgrade Now
-            </button>
-          </div>
-        </div> */}
+          {/* Admin link — shown only for admins */}
+          {user?.role === "admin" && (
+            <NavLink
+              to="/admin/role-requests"
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-col items-center justify-center rounded-xl p-2 text-xs font-medium transition-all duration-200 md:flex-row md:justify-start md:px-4 md:py-3 md:text-sm",
+                  isActive
+                    ? "text-primary md:bg-primary/10 md:border-l-4 md:border-primary md:rounded-l-none md:rounded-r-xl"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )
+              }
+            >
+              <ShieldCheck className="mb-1 h-5 w-5 md:mb-0 md:mr-3" />
+              <span className="flex-1">Role Requests</span>
+              {pendingCount > 0 && (
+                <Badge className="ml-auto bg-yellow-500 text-black text-xs h-5 min-w-[20px] flex items-center justify-center hidden md:flex">
+                  {pendingCount}
+                </Badge>
+              )}
+            </NavLink>
+          )}
+        </div>
       </div>
     </nav>
   );

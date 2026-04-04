@@ -15,6 +15,7 @@ import Budgets from "./components/Budgets";
 import Settings from "./components/Settings";
 import Login from "./components/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoleRequestsPage from "./pages/AdminRoleRequestsPage";
 
 function App() {
   const [stats, setStats] = useState({ total: 0, by_category: {}, count: 0 });
@@ -62,6 +63,13 @@ function App() {
             <Route path="/multi-agent" element={<MultiAgent />} />
             {/* <Route path="/budgets" element={<Budgets />} /> */}
             <Route path="/settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        {/* Admin-only Routes */}
+        <Route element={<ProtectedRoute adminOnly />}>
+          <Route element={<Layout setShowGroupModal={setShowGroupModal} />}>
+            <Route path="/admin/role-requests" element={<AdminRoleRequestsPage />} />
           </Route>
         </Route>
 
