@@ -273,7 +273,7 @@ flowchart TD
     ROLE2 --> CTRL2[getAllExpenses controller]
     CTRL2 --> QUERY["Build filter object\nfrom query params"]
     QUERY --> FIND["Expense.find(filter)\n.sort().skip().limit()"]
-    FIND --> PAGED([{ data, pagination, activeFilters }])
+    FIND --> PAGED["{ data, pagination, activeFilters }"]
 ```
 
 ---
@@ -820,12 +820,12 @@ All errors are normalised in `middleware/errorHandler.js`:
 
 ```mermaid
 flowchart LR
-    Q([User query\n"natural language"]) --> CTRL[ai.controller.js]
-    CTRL --> ES[expense.service.js\nfetch user expenses]
+    Q([User query<br/>natural language]) --> CTRL[ai.controller.js]
+    CTRL --> ES[expense.service.js<br/>fetch user expenses]
     ES --> DB[(MongoDB)]
-    DB --> CTX["Build context string\nexpense data as JSON"]
-    CTX --> GEMINI["Gemini API\ngenerateContent()"]
-    GEMINI --> ANS([Structured answer\nreturned to client])
+    DB --> CTX["Build context string<br/>expense data as JSON"]
+    CTX --> GEMINI["Gemini API<br/>generateContent()"]
+    GEMINI --> ANS([Structured answer<br/>returned to client])
 ```
 
 The AI service (`services/ai.service.js`) passes the user's full expense history (filtered to a reasonable date window) as context to Gemini, then asks the model to answer the natural language question grounded in that data. No data ever leaves the request — Gemini receives the expenses as inline context, not stored in any external system.
