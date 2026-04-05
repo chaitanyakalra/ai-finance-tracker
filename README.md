@@ -49,8 +49,9 @@
 10. [Data models](#10-data-models)
 11. [Frontend pages & components](#11-frontend-pages--components)
 12. [Deployment](#12-deployment)
-13. [Contributing](#13-contributing)
-14. [License](#14-license)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Contributing](#14-contributing)
+15. [License](#15-license)
 
 ---
 
@@ -287,26 +288,31 @@ ai-finance-tracker/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/                   # shadcn/ui primitives
-│   │   │   ├── ViewerBanner.jsx      # Upgrade prompt for viewers
+│   │   │   ├── Dashboard.jsx         # Main dashboard view
+│   │   │   ├── AddExpense.jsx        # Expense creation form
+│   │   │   ├── BillUpload.jsx        # Receipt/bill upload interface
+│   │   │   ├── AIChat.jsx            # AI chatbot interface
+│   │   │   ├── MultiAgent.jsx        # Multi-agent AI interface
 │   │   │   ├── RoleRequestModal.jsx  # Role upgrade request form
 │   │   │   ├── MyRequestStatus.jsx   # Request status tracker
+│   │   │   ├── LandingPage.jsx       # Public landing page
+│   │   │   ├── Login.jsx             # Login with Google OAuth
+│   │   │   ├── AuthCallback.jsx      # OAuth callback handler
+│   │   │   ├── ProtectedRoute.jsx    # Route guard (auth + admin)
 │   │   │   └── ...
 │   │   ├── pages/
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Expenses.jsx
-│   │   │   ├── Analytics.jsx
-│   │   │   ├── Groups.jsx
-│   │   │   ├── Grants.jsx
-│   │   │   └── admin/
-│   │   │       └── RoleRequestsPage.jsx
+│   │   │   └── AdminRoleRequestsPage.jsx  # Admin role request management
+│   │   ├── config/
+│   │   │   └── api.config.js         # API base URL + endpoint definitions
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx       # JWT + user state
-│   │   ├── hooks/
-│   │   ├── lib/
+│   │   │   └── AuthContext.jsx       # JWT + user state + role flags
+│   │   ├── utils/
 │   │   │   └── api.js               # Axios instance + interceptors
-│   │   └── main.jsx
+│   │   ├── hooks/
+│   │   └── App.jsx
 │   ├── .env
 │   ├── vite.config.js
+│   ├── vercel.json
 │   └── package.json
 │
 └── backend/                          # Express.js REST API
@@ -425,7 +431,8 @@ PORT=8000
 NODE_ENV=development
 
 # MongoDB
-MONGODB_URI=mongodb://localhost:27017/finance-tracker
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=finance_tracker
 
 # JWT
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
@@ -436,26 +443,31 @@ REFRESH_TOKEN_EXPIRY=7d
 # Google OAuth
 GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
-GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+# BACKEND_URL is used to construct the OAuth callback: ${BACKEND_URL}/api/auth/google/callback
+BACKEND_URL=http://localhost:8000
+
+# Frontend URL (for CORS + post-OAuth redirect)
+FRONTEND_URL=http://localhost:5173
+
+# CORS (comma-separated list of allowed origins; localhost is always allowed)
+CORS_ORIGINS=http://localhost:5173
 
 # Gemini AI
 GEMINI_API_KEY=your-gemini-api-key
 
-# Frontend URL (for CORS + OAuth redirect)
-FRONTEND_URL=http://localhost:5173
-
 # AWS (optional — for bill parsing)
-AWS_REGION=ap-south-1
+AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 LAMBDA_FUNCTION_NAME=bill-extractor
+USE_LAMBDA=false
 
-# SMTP (optional — falls back to console.log if missing)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-SMTP_FROM=FinanceGuard AI <your-email@gmail.com>
+# Email / SMTP (optional — notifications fall back to console.log if missing)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password
+EMAIL_FROM=FinanceGuard AI <your-email@gmail.com>
 
 # Supabase (optional)
 SUPABASE_URL=https://your-project.supabase.co
@@ -467,9 +479,15 @@ SUPABASE_ANON_KEY=your-anon-key
 Create `frontend/.env`:
 
 ```env
-VITE_API_URL=http://localhost:8000/api
-VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+# Backend API base URL — points to the Express server (no /api suffix)
+# The /api prefix is added automatically by frontend/src/config/api.config.js
+VITE_BACKEND_URL=http://localhost:8000
 ```
+
+> **API base URL configuration:** The frontend resolves the backend URL through
+> `frontend/src/config/api.config.js`. It reads `VITE_BACKEND_URL` (recommended)
+> or the legacy `VITE_API_BASE_URL` fallback. In production, if neither is set the
+> app throws an error. In development it defaults to `http://localhost:8000`.
 
 ### 6.5 Run in development
 
@@ -698,18 +716,18 @@ Authorization: Bearer <access_token>
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| `POST` | `/ai/query` | Yes | Natural language expense query |
-| `POST` | `/ai/analyze` | Yes | Spending pattern analysis |
-| `POST` | `/ai/recommendations` | Yes | AI budget recommendations |
+| `POST` | `/ai/chat` | Yes | Natural language expense query (chat interface) |
+| `POST` | `/ai/multi-agent` | Yes | Multi-agent spending pattern analysis |
+| `GET` | `/ai/behavioral-insight` | Yes | Behavioral finance insights |
 
-**AI query body:**
+**AI chat body:**
 ```json
 {
   "query": "How much did I spend on food last month compared to this month?"
 }
 ```
 
-**AI query response:**
+**AI chat response:**
 ```json
 {
   "answer": "You spent ₹12,400 on food last month vs ₹9,800 this month — a 21% decrease.",
@@ -919,17 +937,17 @@ createdAt   Date
 
 | Route | Component | Access |
 |---|---|---|
-| `/` | `Dashboard.jsx` | All authenticated |
-| `/expenses` | `Expenses.jsx` | All authenticated |
-| `/analytics` | `Analytics.jsx` | All authenticated |
-| `/groups` | `Groups.jsx` | analyst, admin |
-| `/grants` | `Grants.jsx` | All authenticated |
-| `/admin/role-requests` | `RoleRequestsPage.jsx` | admin only |
-| `/login` | `Login.jsx` | Public |
+| `/` | `LandingPage.jsx` | Public |
+| `/auth/callback` | `AuthCallback.jsx` | Public (OAuth callback) |
+| `/dashboard` | `Dashboard.jsx` | All authenticated |
+| `/add-expense` | `AddExpense.jsx` | analyst, admin |
+| `/bill-upload` | `BillUpload.jsx` | All authenticated |
+| `/chat` | `AIChat.jsx` | All authenticated |
+| `/multi-agent` | `MultiAgent.jsx` | All authenticated |
+| `/settings` | `Settings.jsx` | All authenticated |
+| `/admin/role-requests` | `AdminRoleRequestsPage.jsx` | admin only |
 
 ### Key components
-
-**`ViewerBanner`** — shown only to viewers; explains read-only status and provides "Request access upgrade" CTA.
 
 **`RoleRequestModal`** — form with:
 - Role selector (cannot select current role or lower)
@@ -941,25 +959,24 @@ createdAt   Date
 - `APPROVED` — green
 - `REJECTED` — red with rejection reason shown
 
-**`RoleRequestsPage`** (admin) — table with:
+**`AdminRoleRequestsPage`** (admin) — table with:
 - Columns: Name, Email, Current Role, Requested Role, Reason, Requested At, Actions
 - Approve / Reject buttons with confirmation modals
 - Tab filter: PENDING / APPROVED / REJECTED
-- Live pending count badge in sidebar nav
 
 ### Role-gated UI rendering
 
 ```jsx
-// Viewer-only banner
-{user.role === 'viewer' && <ViewerBanner />}
+// Show role request modal for non-admins
+{user.role !== 'admin' && <RoleRequestModal />}
 
 // Hide write actions from viewers
 {user.role !== 'viewer' && <AddExpenseButton />}
 
-// Admin nav link with pending badge
+// Admin nav link to role requests page
 {user.role === 'admin' && (
   <NavLink to="/admin/role-requests">
-    Role requests {pendingCount > 0 && <Badge>{pendingCount}</Badge>}
+    Role Requests
   </NavLink>
 )}
 ```
@@ -973,7 +990,11 @@ createdAt   Date
 1. Connect the `backend/` directory as a Web Service
 2. Set build command: `npm install`
 3. Set start command: `npm start`
-4. Add all environment variables from section 6.3
+4. Add all environment variables from section 6.3, including:
+   - `BACKEND_URL` → your Render service URL (e.g. `https://ai-finance-tracker.onrender.com`)
+   - `FRONTEND_URL` → your Vercel frontend URL (e.g. `https://ai-finance-tracker.vercel.app`)
+   - `CORS_ORIGINS` → your Vercel frontend URL (same as `FRONTEND_URL`)
+   - `MONGO_URL` → your MongoDB Atlas connection string
 5. Enable "Auto-deploy on push"
 
 > **Note:** Render free tier cold starts (~30s). The `isDBConnected()` guard in every controller returns a clean `503` during cold start rather than crashing.
@@ -982,30 +1003,64 @@ createdAt   Date
 
 1. Connect the `frontend/` directory
 2. Framework preset: `Vite`
-3. Add environment variables from section 6.4
+3. Add environment variables:
+   - `VITE_BACKEND_URL` → your Render backend URL (e.g. `https://ai-finance-tracker.onrender.com`)
 4. Ensure `frontend/vercel.json` contains the SPA catch-all rewrite:
    ```json
    { "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
    ```
-5. Set `VITE_API_URL` to your Render backend URL (e.g. `https://ai-finance-tracker.onrender.com/api`)
 
 ### MongoDB — Atlas
 
 1. Create a free M0 cluster
 2. Whitelist `0.0.0.0/0` (or your Render IP range)
 3. Create a database user
-4. Copy the connection string to `MONGODB_URI`
+4. Copy the connection string to `MONGO_URL` in your backend environment variables (e.g. on Render)
 
 ### Google OAuth setup
 
 1. Go to Google Cloud Console → APIs & Services → Credentials
 2. Create OAuth 2.0 Client ID (Web application)
 3. Add authorised redirect URI: `https://your-backend.onrender.com/api/auth/google/callback`
+   - This must match `${BACKEND_URL}/api/auth/google/callback` exactly
 4. Add authorised JavaScript origins: `https://your-frontend.vercel.app`
 
 ---
 
-## 13. Contributing
+## 13. Troubleshooting
+
+### CORS errors
+
+- Ensure `CORS_ORIGINS` in `backend/.env` includes your exact frontend URL (no trailing slash).
+- In development, `localhost` origins are always allowed — no extra config needed.
+- In production, set `CORS_ORIGINS=https://your-frontend.vercel.app` on Render.
+
+### OAuth redirect mismatch
+
+- The callback URL is constructed as `${BACKEND_URL}/api/auth/google/callback`.
+- Ensure `BACKEND_URL` in `backend/.env` (or on Render) exactly matches the **Authorised redirect URI** registered in Google Cloud Console.
+- Common mistake: trailing slash, `http` vs `https`, or wrong port.
+
+### Missing `VITE_BACKEND_URL` in production
+
+- The frontend reads `VITE_BACKEND_URL` from `frontend/src/config/api.config.js` at build time.
+- If the variable is missing in a production build, the app throws:
+  > `Backend URL not configured. Please set VITE_BACKEND_URL environment variable.`
+- Set `VITE_BACKEND_URL` in Vercel's environment variable settings **before** triggering a build.
+
+### MongoDB connection fails on Render
+
+- Render IPs are not static; whitelist `0.0.0.0/0` in MongoDB Atlas or use Atlas VPC peering.
+- Confirm `MONGO_URL` is the full Atlas SRV connection string and includes the database name or set `DB_NAME` separately.
+
+### `npm run dev` not auto-reloading (backend)
+
+- The backend uses Node.js `--watch` flag (`npm run dev`), which requires Node.js >= 18.
+- Run `node --version` and upgrade if needed.
+
+---
+
+## 14. Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/your-feature`
@@ -1024,7 +1079,7 @@ Before submitting a PR:
 
 ---
 
-## 14. License
+## 15. License
 
 This project is licensed under the **ISC License**.
 
