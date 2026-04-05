@@ -1,5 +1,9 @@
 {
-  "routes": [
-    { "src": "/[^.]+", "dest": "/", "status": 200 }
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
