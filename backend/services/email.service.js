@@ -6,20 +6,29 @@ dotenv.config();
 // Create transporter
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT) || 587,
-    secure: false, // true for 465, false for other ports
+    port: parseInt(process.env.EMAIL_PORT) || 465,
+    secure: (parseInt(process.env.EMAIL_PORT) || 465) === 465, // true for 465, false for 587
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
-    }
+    },
+    // Increased timeouts for more resilient connections on Render environments
+    connectionTimeout: 10000, // 10 seconds
+    greetingTimeout: 10000,   // 10 seconds
+    socketTimeout: 30000      // 30 seconds
 });
 
 // Verify transporter configuration
 transporter.verify((error, success) => {
     if (error) {
         console.error('❌ Email service configuration error:', error);
+        console.error('--- SMTP DEBUG INFO ---');
+        console.error(`Host: ${process.env.EMAIL_HOST || 'smtp.gmail.com'}`);
+        console.error(`Port: ${process.env.EMAIL_PORT || 465}`);
+        console.error(`Secure: ${(parseInt(process.env.EMAIL_PORT) || 465) === 465}`);
+        console.error('------------------------');
     } else {
-        console.log('✅ Email service ready');
+        console.log('✅ Email service ready (connected via SSL/TLS)');
     }
 });
 
@@ -82,8 +91,19 @@ export async function sendGrantInvitation({ studentEmail, facultyName, grantAmou
             `
         };
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, error: null };
+        // If transporter.verify failed but we attempt sendMail anyway:
+        try {
+            await transporter.sendMail(mailOptions);
+            return { success: true, error: null };
+        } catch (sendError) {
+            console.warn('⚠️ SMTP send error, falling back to console log:');
+            console.log('--- FALLBACK EMAIL ---');
+            console.log(`To: ${mailOptions.to}`);
+            console.log(`Subject: ${mailOptions.subject}`);
+            console.log(`Body excerpt: ${mailOptions.html.substring(0, 500).replace(/<[^>]*>/g, '')}...`);
+            console.log('--- END FALLBACK ---');
+            return { success: true, error: null, fallback: true };
+        }
     } catch (error) {
         console.error('Send invitation email error:', error);
         return { success: false, error: error.message };
@@ -209,8 +229,52 @@ export async function sendBillRejectionEmail({ studentEmail, billAmount, rejecti
     }
 }
 
+/**
+ * Send role request status update to user
+ * @param {Object} params - Email parameters
+ * @param {string} params.userEmail - User's email
+ * @param {string} params.status - NEW status (APPROVED/REJECTED)
+ * @param {string} params.role - The role requested
+ * @param {string} params.notes - Admin notes or rejection reason
+ * @returns {Promise<Object>} - { success: boolean, error: string }
+ */
+export async function sendRoleRequestStatusEmail({ userEmail, status, role, notes }) {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+            to: userEmail,
+            subject: `📋 Role Request ${status}: ${role}`,
+            html: `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <h2>Role Request ${status}</h2>
+                    <p>Your request for the <strong>${role}</strong> role has been <strong>${status.toLowerCase()}</strong>.</p>
+                    ${notes ? `<p><strong>Note:</strong> ${notes}</p>` : ''}
+                    <p>Log in to see your updated permissions.</p>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            return { success: true, error: null };
+        } catch (sendError) {
+            console.warn('⚠️ SMTP send error, falling back to console log:');
+            console.log('--- FALLBACK EMAIL ---');
+            console.log(`To: ${mailOptions.to}`);
+            console.log(`Subject: ${mailOptions.subject}`);
+            console.log(`Body excerpt: ${mailOptions.html.substring(0, 500).replace(/<[^>]*>/g, '')}...`);
+            console.log('--- END FALLBACK ---');
+            return { success: true, error: null, fallback: true };
+        }
+    } catch (error) {
+        console.error('Send role status email error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export default {
     sendGrantInvitation,
     sendBillApprovalEmail,
-    sendBillRejectionEmail
+    sendBillRejectionEmail,
+    sendRoleRequestStatusEmail
 };

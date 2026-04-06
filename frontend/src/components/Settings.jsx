@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -5,15 +6,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { apiService } from "../utils/api";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 function Settings() {
     const navigate = useNavigate();
+    const { user, fetchCurrentUser } = useAuth();
+    const [displayName, setDisplayName] = useState("");
+    const [saving, setSaving] = useState(false);
+
+    // Sync display name from user when auth loads
+    useEffect(() => {
+        if (user?.name) {
+            setDisplayName(user.name);
+        }
+    }, [user]);
 
     const handleLogout = () => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
         navigate('/');
+    };
+
+    const handleSaveProfile = async () => {
+        if (!user?.id) return;
+        try {
+            setSaving(true);
+            await apiService.updateUserProfile(user.id, { name: displayName });
+            await fetchCurrentUser(); // Refresh the user data in context
+            toast.success("Profile updated successfully!");
+        } catch (error) {
+            console.error("Error updating profile:", error);
+            toast.error("Failed to update profile");
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -28,12 +58,39 @@ function Settings() {
                 <CardContent className="space-y-4">
                     <div className="grid gap-2">
                         <Label htmlFor="name">Display Name</Label>
-                        <Input id="name" defaultValue="Chaitanya Kalra" />
+                        <Input
+                            id="name"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            placeholder="Enter your name"
+                        />
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" defaultValue="user@example.com" disabled />
+                        <Input
+                            id="email"
+                            value={user?.email || ""}
+                            disabled
+                            className="opacity-60 cursor-not-allowed"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Email is linked to your Google account and cannot be changed.
+                        </p>
                     </div>
+                    <Button
+                        onClick={handleSaveProfile}
+                        disabled={saving || displayName === user?.name}
+                        className="mt-2"
+                    >
+                        {saving ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            "Save Changes"
+                        )}
+                    </Button>
                 </CardContent>
             </Card>
 

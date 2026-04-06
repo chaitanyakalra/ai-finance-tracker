@@ -467,6 +467,31 @@ export const apiService = {
   getGrantBills: (grantId) => {
     return apiClient.get(getEndpoint(`/bills/grant/${grantId}`));
   },
+
+  // ========== RBAC User Endpoints ==========
+
+  getCurrentUser: () => apiClient.get('/users/me'),
+  getAllUsers: (params) => apiClient.get('/users', { params }),
+  getUserById: (userId) => apiClient.get(`/users/${userId}`),
+  updateUserRole: (userId, role) => apiClient.put(`/users/${userId}/role`, { role }),
+  updateUserStatus: (userId, status) => apiClient.put(`/users/${userId}/status`, { status }),
+  updateUserProfile: (userId, data) => apiClient.put(`/users/${userId}/profile`, data),
+
+  // ========== Role Request Endpoints ==========
+
+  requestRoleUpgrade: (data) => apiClient.post('/users/request-role', data),
+  getUserRequests: () => apiClient.get('/users/my-requests'),
+  getAdminRequests: (params) => apiClient.get('/admin/role-requests', { params }),
+  getRequestById: (id) => apiClient.get(`/admin/role-requests/${id}`),
+  approveRequest: (id, notes) => apiClient.post(`/admin/role-requests/${id}/approve`, { adminNotes: notes }),
+  rejectRequest: (id, reason) => apiClient.post(`/admin/role-requests/${id}/reject`, { reason }),
+
+  // ========== Dashboard Endpoints ==========
+
+  getDashboardSummary: (params) => apiClient.get('/dashboard', { params }),
+  getCategoryAnalytics: (params) => apiClient.get('/dashboard/categories', { params }),
+  getMonthlyTrends: (params) => apiClient.get('/dashboard/trends', { params }),
+  getTopCategories: (params) => apiClient.get('/dashboard/top-categories', { params }),
 };
 
 // Legacy export for backward compatibility

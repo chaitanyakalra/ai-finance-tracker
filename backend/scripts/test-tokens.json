@@ -1,0 +1,17 @@
+{
+  "admin": {
+    "email": "admin@test.com",
+    "id": "27f4df1e-cd2f-43d6-b831-29b147f77394",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIyN2Y0ZGYxZS1jZDJmLTQzZDYtYjgzMS0yOWIxNDdmNzczOTQiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzc1MzAzMTgzLCJleHAiOjE3NzUzMDQwODN9.4BMBXx6Zw3t9cgmLxXbosEj1XFhqBOHGuPPgeZMxqsg"
+  },
+  "analyst": {
+    "email": "analyst@test.com",
+    "id": "c30c1594-85c2-4b16-8929-bb9180d86ecc",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjMzBjMTU5NC04NWMyLTRiMTYtODkyOS1iYjkxODBkODZlY2MiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzc1MzAzMTgzLCJleHAiOjE3NzUzMDQwODN9.LdI8TBN31BgCA1PoVSmzQDJeslx2yWgMeDrvOCukwag"
+  },
+  "viewer": {
+    "email": "viewer@test.com",
+    "id": "865b82bf-8715-4878-ae13-7f11ae7ad47f",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4NjViODJiZi04NzE1LTQ4NzgtYWUxMy03ZjExYWU3YWQ0N2YiLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzc1MzAzMTgzLCJleHAiOjE3NzUzMDQwODN9.gJFv86pqYqh8FP9-OZhIE_0bqCTS69wcnVEP9NAmPZ0"
+  }
+}

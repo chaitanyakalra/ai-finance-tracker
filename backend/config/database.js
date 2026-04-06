@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
 import { SAMPLE_EXPENSES } from '../utils/sampleData.js';
 import dotenv from 'dotenv';
 import Expense from '../models/Expense.js';
@@ -7,6 +8,11 @@ dotenv.config();
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost:27017';
 const dbName = process.env.DB_NAME || 'finance_tracker';
+
+
+// Set DNS servers to resolve MongoDB SRV records reliably
+// This fixes ECONNREFUSED issues on some networks (like Jio/Airtel) 
+dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 export async function connectDB() {
   try {
